@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+  CLIENT
+}
+
+enum TicketStatus {
+  NUEVO
+  ASIGNADO
+  EN_PROGRESO
+  RESUELTO
+  CERRADO
+  REABIERTO
+}
+
+enum Prioridad {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String?
+  image     String?
+  phone     String?
+  role      Role     @default(CLIENT)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedTickets Ticket[] @relation("AssignedAgent")
+  createdTickets  Ticket[] @relation("Creator")
+  comments        Comment[]
+  attachments     Attachment[]
+  auditLogs       AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Ticket {
+  id          String       @id @default(cuid())
+  titulo      String
+  descripcion String
+  status      TicketStatus @default(NUEVO)
+  prioridad   Prioridad    @default(MEDIA)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  clienteId String
+  cliente   User   @relation("Creator", fields: [clienteId], references: [id])
+
+  agenteId  String?
+  agente    User?   @relation("AssignedAgent", fields: [agenteId], references: [id])
+
+  categoriaId String?
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id])
+
+  comments   Comment[]
+  attachments Attachment[]
+
+  @@index([status])
+  @@index([prioridad])
+  @@index([clienteId])
+  @@index([agenteId])
+  @@index([categoriaId])
+  @@index([createdAt])
+}
+
+model Categoria {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  color     String   @default("#3b82f6")
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  tickets Ticket[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  contenido String
+  createdAt DateTime @default(now())
+
+  ticketId  String
+  ticket    Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  autorId String
+  autor   User   @relation(fields: [autorId], references: [id])
+
+  @@index([ticketId])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  nombre    String
+  url       String
+  createdAt DateTime @default(now())
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  subidoPorId String
+  subidoPor   User   @relation(fields: [subidoPorId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  accion     String
+  detalle    String?
+  ip         String?
+  fecha      DateTime @default(now())
+
+  usuarioId String
+  usuario   User     @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@index([accion])
+  @@index([fecha])
+}

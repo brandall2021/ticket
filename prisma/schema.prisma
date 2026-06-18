@@ -132,3 +132,14 @@ model AuditLog {
   @@index([accion])
   @@index([fecha])
 }
+
+model StockItem {
+  id        String   @id @default(cuid())
+  tipo      String
+  nombre    String
+  cantidad  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tipo])
+}

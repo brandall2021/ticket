@@ -42,6 +42,14 @@ export async function Header() {
                 Admin
               </Link>
             )}
+            {session?.user?.role && ["ADMIN", "AGENT"].includes(session.user.role) && (
+              <Link
+                href="/admin/stock"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-neutral-300 dark:hover:bg-navy-700 dark:hover:text-brand-400"
+              >
+                Stock
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">

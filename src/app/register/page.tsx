@@ -39,7 +39,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="relative flex min-h-screen items-center justify-center px-4 before:absolute before:inset-0 before:bg-[url('/bg-code.jpg')] before:bg-cover before:bg-center before:opacity-20">
+      <div className="absolute inset-0 bg-gradient-to-b from-navy-900/60 via-navy-900/40 to-navy-900/60" />
+      <div className="relative z-10 w-full max-w-sm">
       <Card className="w-full max-w-sm p-6 space-y-6">
         <div className="flex flex-col items-center gap-2">
           <Building2 className="h-10 w-10 text-brand-600" />
@@ -98,6 +100,7 @@ export default function RegisterPage() {
           </a>
         </div>
       </Card>
+      </div>
     </div>
   )
 }

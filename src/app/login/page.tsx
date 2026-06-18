@@ -117,10 +117,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4">
-      <Suspense fallback={<div className="text-gray-500">Cargando...</div>}>
-        <LoginForm />
-      </Suspense>
+    <div className="relative flex min-h-[80vh] items-center justify-center px-4 before:absolute before:inset-0 before:bg-[url('/bg-code.jpg')] before:bg-cover before:bg-center before:opacity-20">
+      <div className="absolute inset-0 bg-gradient-to-b from-navy-900/60 via-navy-900/40 to-navy-900/60" />
+      <div className="relative z-10 w-full max-w-sm">
+        <Suspense fallback={<div className="text-gray-500">Cargando...</div>}>
+          <LoginForm />
+        </Suspense>
+      </div>
     </div>
   )
 }

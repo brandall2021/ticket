@@ -20,9 +20,9 @@ export async function Header() {
             <Image
               src="/logo.png"
               alt="Helpdesk"
-              width={130}
-              height={36}
-              className="h-9 w-auto"
+              width={180}
+              height={50}
+              className="h-12 w-auto"
               priority
             />
           </Link>

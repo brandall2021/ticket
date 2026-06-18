@@ -139,6 +139,12 @@ export default async function TicketDetailPage({
               </span>{" "}
               {formatDate(ticket.updatedAt)}
             </div>
+            {ticket.ubicacion && (
+              <div>
+                <span className="font-medium text-neutral-900">Ubicación:</span>{" "}
+                {ticket.ubicacion}
+              </div>
+            )}
           </div>
 
           {isAdminOrAgent && (

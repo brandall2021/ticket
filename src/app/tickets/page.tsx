@@ -153,6 +153,7 @@ export default async function TicketsPage({
                   <div className="text-right text-sm text-neutral-500">
                     <p>{ticket.cliente.name}</p>
                     {ticket.agente && <p>→ {ticket.agente.name}</p>}
+                    {ticket.ubicacion && <p className="text-xs">{ticket.ubicacion}</p>}
                     <p>{formatDate(ticket.createdAt)}</p>
                   </div>
                 </CardContent>

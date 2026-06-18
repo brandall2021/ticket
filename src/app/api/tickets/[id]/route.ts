@@ -88,6 +88,10 @@ export async function PATCH(
     data.categoriaId = body.categoriaId
     changes.push("categoría cambiada")
   }
+  if (body.ubicacion !== undefined) {
+    data.ubicacion = body.ubicacion
+    changes.push(`ubicación: "${body.ubicacion}"`)
+  }
 
   if (changes.length === 0) {
     return NextResponse.json({ error: "Sin cambios" }, { status: 400 })

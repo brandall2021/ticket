@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const { titulo, descripcion, prioridad, categoriaId, archivos } = await req.json()
+  const { titulo, descripcion, prioridad, categoriaId, ubicacion, archivos } = await req.json()
 
   if (!titulo || !descripcion) {
     return NextResponse.json(
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
       titulo,
       descripcion,
       prioridad: prioridad || "MEDIA",
+      ubicacion: ubicacion || null,
       categoriaId: categoriaId || null,
       clienteId: session.user.id,
       status: "NUEVO",

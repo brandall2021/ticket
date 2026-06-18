@@ -28,6 +28,7 @@ export default function NuevoTicketPage() {
   const [descripcion, setDescripcion] = useState("")
   const [prioridad, setPrioridad] = useState("MEDIA")
   const [categoriaId, setCategoriaId] = useState("")
+  const [ubicacion, setUbicacion] = useState("")
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [archivos, setArchivos] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
@@ -93,6 +94,7 @@ export default function NuevoTicketPage() {
         descripcion,
         prioridad,
         categoriaId: categoriaId || null,
+        ubicacion: ubicacion || null,
         archivos: archivosSubidos,
       }),
     })
@@ -176,6 +178,16 @@ export default function NuevoTicketPage() {
                   </option>
                 ))}
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ubicacion">Ubicación</Label>
+              <Input
+                id="ubicacion"
+                value={ubicacion}
+                onChange={(e) => setUbicacion(e.target.value)}
+                placeholder="Ej: Oficina central, sucursal, domicilio..."
+              />
             </div>
 
             <div className="space-y-2">

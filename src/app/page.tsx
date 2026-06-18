@@ -31,7 +31,7 @@ export default async function Home() {
   if (isAgent) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Panel de Control</h1>
+        <h1 className="text-2xl font-bold mb-6 text-neutral-900 dark:text-neutral-100">Panel de Control</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
@@ -113,7 +113,7 @@ export default async function Home() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Mis Tickets</h1>
+      <h1 className="text-2xl font-bold mb-6 text-neutral-900 dark:text-neutral-100">Mis Tickets</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card>

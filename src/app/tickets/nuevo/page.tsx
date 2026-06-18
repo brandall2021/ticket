@@ -113,7 +113,7 @@ export default function NuevoTicketPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12 text-neutral-500">
+      <div className="flex items-center justify-center p-12 text-neutral-500 dark:text-neutral-400">
         Cargando...
       </div>
     )
@@ -215,7 +215,7 @@ export default function NuevoTicketPage() {
                   {archivos.map((file, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm"
+                      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm dark:border-navy-600 dark:bg-navy-700/50"
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Paperclip className="h-4 w-4 shrink-0 text-neutral-400" />

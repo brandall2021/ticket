@@ -98,7 +98,7 @@ export default function AdminCategoriasPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Categorías</h1>
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Categorías</h1>
         <Button variant="outline" size="sm" onClick={() => router.push("/admin")}>
           Volver
         </Button>
@@ -164,7 +164,7 @@ export default function AdminCategoriasPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-neutral-500">
+                  <tr className="border-b text-left text-neutral-500 dark:border-navy-700">
                     <th className="pb-3 pr-4 font-medium">Nombre</th>
                     <th className="pb-3 pr-4 font-medium">Color</th>
                     <th className="pb-3 pr-4 font-medium">Estado</th>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth, signOut } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const roleBadgeVariant = {
   ADMIN: "destructive" as const,
@@ -13,40 +14,41 @@ export async function Header() {
   const session = await auth();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white transition-colors dark:border-navy-700 dark:bg-navy-800">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
+        <div className="flex items-center gap-4 sm:gap-8">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image
               src="/logo.png"
               alt="Helpdesk"
               width={180}
               height={50}
-              className="h-12 w-auto"
+              className="h-10 w-auto sm:h-12"
               priority
             />
           </Link>
           <nav className="hidden items-center gap-1 sm:flex">
             <Link
               href="/tickets"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-neutral-300 dark:hover:bg-navy-700 dark:hover:text-brand-400"
             >
               Tickets
             </Link>
             {session?.user?.role && ["ADMIN", "AGENT"].includes(session.user.role) && (
               <Link
                 href="/admin"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-neutral-300 dark:hover:bg-navy-700 dark:hover:text-brand-400"
               >
                 Admin
               </Link>
             )}
           </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <ThemeToggle />
           {session?.user ? (
             <>
-              <span className="hidden text-sm text-neutral-600 sm:inline">
+              <span className="hidden text-sm text-neutral-600 dark:text-neutral-300 sm:inline">
                 {session.user.name ?? session.user.email}
               </span>
               {session.user.role && (
@@ -62,7 +64,7 @@ export async function Header() {
               >
                 <button
                   type="submit"
-                  className="text-sm font-medium text-neutral-500 underline-offset-2 transition-colors hover:text-brand-600 hover:underline"
+                  className="text-sm font-medium text-neutral-500 underline-offset-2 transition-colors hover:text-brand-600 hover:underline dark:text-neutral-400 dark:hover:text-brand-400"
                 >
                   Salir
                 </button>

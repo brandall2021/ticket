@@ -7,13 +7,13 @@ const variantStyles = {
   default:
     "bg-brand-600 text-white hover:bg-brand-700 shadow-sm",
   secondary:
-    "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 shadow-sm",
+    "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 shadow-sm dark:bg-navy-700 dark:text-neutral-100 dark:hover:bg-navy-600",
   destructive:
     "bg-red-600 text-white hover:bg-red-500 shadow-sm",
   outline:
-    "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100",
+    "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100 dark:border-navy-600 dark:bg-navy-800 dark:text-neutral-100 dark:hover:bg-navy-700",
   ghost:
-    "text-neutral-900 hover:bg-neutral-100",
+    "text-neutral-900 hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-navy-700",
 } as const;
 
 const sizeStyles = {

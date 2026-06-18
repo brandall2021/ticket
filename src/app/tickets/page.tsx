@@ -68,7 +68,7 @@ export default async function TicketsPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Tickets</h1>
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Tickets</h1>
         <Link href="/tickets/nuevo">
           <Button>
             <Plus className="h-4 w-4" />
@@ -121,7 +121,7 @@ export default async function TicketsPage({
         <div className="space-y-3">
           {tickets.map((ticket) => (
             <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-              <Card className="transition-colors hover:bg-neutral-50">
+              <Card className="transition-colors hover:bg-neutral-50 dark:hover:bg-navy-700/50">
                 <CardContent className="flex items-start justify-between p-4">
                   <div className="space-y-2">
                     <h3 className="font-semibold">{ticket.titulo}</h3>

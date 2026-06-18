@@ -116,7 +116,7 @@ export default async function TicketDetailPage({
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <p className="whitespace-pre-wrap text-neutral-700">
+          <p className="whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
             {ticket.descripcion}
           </p>
 
@@ -165,14 +165,14 @@ export default async function TicketDetailPage({
         </CardHeader>
         <CardContent className="space-y-4">
           {ticket.comments.length === 0 ? (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Sin comentarios aún.
             </p>
           ) : (
             ticket.comments.map((comment) => (
               <div
                 key={comment.id}
-                className="rounded-lg border border-neutral-100 bg-neutral-50 p-4"
+                className="rounded-lg border border-neutral-100 bg-neutral-50 p-4 dark:border-navy-700 dark:bg-navy-700/50"
               >
                 <div className="mb-1 flex items-center gap-2">
                   <span className="text-sm font-medium">

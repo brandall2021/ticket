@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const { titulo, descripcion, prioridad, categoriaId } = await req.json()
+  const { titulo, descripcion, prioridad, categoriaId, archivos } = await req.json()
 
   if (!titulo || !descripcion) {
     return NextResponse.json(
@@ -70,10 +70,20 @@ export async function POST(req: NextRequest) {
       categoriaId: categoriaId || null,
       clienteId: session.user.id,
       status: "NUEVO",
+      attachments: archivos?.length
+        ? {
+            create: archivos.map((a: { nombre: string; url: string }) => ({
+              nombre: a.nombre,
+              url: a.url,
+              subidoPorId: session.user.id,
+            })),
+          }
+        : undefined,
     },
     include: {
       cliente: { select: { name: true, email: true } },
       categoria: { select: { nombre: true, color: true } },
+      attachments: true,
     },
   })
 

@@ -32,7 +32,7 @@ const prioridadColors: Record<
 }
 
 function formatDate(date: Date) {
-  return new Date(date).toLocaleDateString("es-AR")
+  return new Date(date).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })
 }
 
 export default async function TicketsPage({

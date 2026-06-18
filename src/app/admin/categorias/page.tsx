@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 function formatDate(d: Date) {
-  return new Date(d).toLocaleDateString("es-AR")
+  return new Date(d).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })
 }
 
 export default async function AdminCategoriasPage() {

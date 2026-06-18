@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { Paperclip, X, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,13 +16,20 @@ interface Categoria {
   color: string
 }
 
+interface ArchivoSubido {
+  nombre: string
+  url: string
+}
+
 export default function NuevoTicketPage() {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [titulo, setTitulo] = useState("")
   const [descripcion, setDescripcion] = useState("")
   const [prioridad, setPrioridad] = useState("MEDIA")
   const [categoriaId, setCategoriaId] = useState("")
   const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [archivos, setArchivos] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -41,10 +49,41 @@ export default function NuevoTicketPage() {
       })
   }, [router])
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || [])
+    setArchivos((prev) => [...prev, ...files])
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  function removeFile(index: number) {
+    setArchivos((prev) => prev.filter((_, i) => i !== index))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
     setError("")
+
+    let archivosSubidos: ArchivoSubido[] = []
+
+    if (archivos.length > 0) {
+      const formData = new FormData()
+      archivos.forEach((f) => formData.append("archivos", f))
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!uploadRes.ok) {
+        setError("Error al subir archivos")
+        setSubmitting(false)
+        return
+      }
+
+      const uploadData = await uploadRes.json()
+      archivosSubidos = uploadData.archivos
+    }
 
     const res = await fetch("/api/tickets", {
       method: "POST",
@@ -54,6 +93,7 @@ export default function NuevoTicketPage() {
         descripcion,
         prioridad,
         categoriaId: categoriaId || null,
+        archivos: archivosSubidos,
       }),
     })
 
@@ -136,6 +176,53 @@ export default function NuevoTicketPage() {
                   </option>
                 ))}
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Archivos adjuntos</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  Seleccionar archivos
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </div>
+              {archivos.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {archivos.map((file, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Paperclip className="h-4 w-4 shrink-0 text-neutral-400" />
+                        <span className="truncate">{file.name}</span>
+                        <span className="shrink-0 text-neutral-400">
+                          ({(file.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(i)}
+                        className="ml-2 shrink-0 text-neutral-400 hover:text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}

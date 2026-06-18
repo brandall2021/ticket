@@ -33,6 +33,7 @@ const prioridadColors: Record<
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
     day: "numeric",
     month: "long",
     year: "numeric",

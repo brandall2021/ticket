@@ -40,7 +40,7 @@ function LoginForm() {
   return (
     <Card className="w-full max-w-sm p-6 space-y-6">
       <div className="flex flex-col items-center gap-2">
-        <Building2 className="h-10 w-10 text-blue-600" />
+        <Building2 className="h-10 w-10 text-brand-600" />
         <h1 className="text-2xl font-bold">Iniciar sesión</h1>
       </div>
 
@@ -100,14 +100,14 @@ function LoginForm() {
       </Button>
 
       <div className="text-center text-sm">
-        <a href="/recuperar" className="text-blue-600 hover:underline">
+        <a href="/recuperar" className="text-brand-600 hover:underline">
           ¿Olvidaste tu contraseña?
         </a>
       </div>
 
       <div className="text-center text-sm text-gray-500">
         ¿No tienes cuenta?{" "}
-        <a href="/register" className="text-blue-600 hover:underline">
+        <a href="/register" className="text-brand-600 hover:underline">
           Registrarse
         </a>
       </div>

@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 
 const variantStyles = {
   default:
-    "bg-neutral-900 text-white hover:bg-neutral-800 shadow-xs",
+    "bg-brand-600 text-white hover:bg-brand-700 shadow-sm",
   secondary:
-    "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 shadow-xs",
+    "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 shadow-sm",
   destructive:
-    "bg-red-600 text-white hover:bg-red-500 shadow-xs",
+    "bg-red-600 text-white hover:bg-red-500 shadow-sm",
   outline:
     "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100",
   ghost:
@@ -34,7 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
           variantStyles[variant],
           sizeStyles[size],
           className,

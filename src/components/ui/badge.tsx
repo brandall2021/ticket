@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 const badgeVariants = {
   default:
-    "bg-neutral-900 text-white",
+    "bg-brand-600 text-white",
   secondary:
     "bg-neutral-100 text-neutral-900",
   destructive:
@@ -13,7 +13,7 @@ const badgeVariants = {
   warning:
     "bg-amber-100 text-amber-700",
   outline:
-    "border border-neutral-300 text-neutral-700",
+    "border border-neutral-300 text-neutral-600",
 } as const;
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

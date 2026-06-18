@@ -30,9 +30,9 @@ export default function RecuperarPage() {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <Card className="w-full max-w-sm p-6 text-center space-y-4">
-          <Mail className="h-10 w-10 text-primary mx-auto" />
+          <Mail className="h-10 w-10 text-brand-600 mx-auto" />
           <h1 className="text-2xl font-bold">Revisa tu correo</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-neutral-500">
             Si la cuenta existe, recibirás un enlace para restablecer tu contraseña.
           </p>
           <Button variant="outline" onClick={() => setSent(false)}>
@@ -47,9 +47,9 @@ export default function RecuperarPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-sm p-6 space-y-6">
         <div className="flex flex-col items-center gap-2">
-          <Mail className="h-10 w-10 text-primary" />
+          <Mail className="h-10 w-10 text-brand-600" />
           <h1 className="text-2xl font-bold">Recuperar contraseña</h1>
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-sm text-neutral-500 text-center">
             Te enviaremos un enlace para restablecer tu contraseña.
           </p>
         </div>
@@ -72,8 +72,8 @@ export default function RecuperarPage() {
           </Button>
         </form>
 
-        <div className="text-center text-sm text-muted-foreground">
-          <a href="/login" className="text-primary hover:underline">
+        <div className="text-center text-sm text-neutral-500">
+          <a href="/login" className="text-brand-600 hover:underline">
             Volver al inicio de sesión
           </a>
         </div>

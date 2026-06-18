@@ -5,7 +5,6 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Paperclip } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TicketActions } from "@/components/ticket-actions"
 import { CommentForm } from "@/components/comment-form"
@@ -82,7 +81,7 @@ export default async function TicketDetailPage({
     <div className="mx-auto max-w-4xl space-y-6 p-6">
       <Link
         href="/tickets"
-        className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900"
+        className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand-600"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver a tickets
@@ -205,7 +204,7 @@ export default async function TicketDetailPage({
                   href={attachment.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                  className="flex items-center gap-2 text-sm text-brand-600 hover:underline"
                 >
                   {attachment.nombre}
                 </a>

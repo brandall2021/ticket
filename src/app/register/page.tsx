@@ -42,7 +42,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-sm p-6 space-y-6">
         <div className="flex flex-col items-center gap-2">
-          <Building2 className="h-10 w-10 text-primary" />
+          <Building2 className="h-10 w-10 text-brand-600" />
           <h1 className="text-2xl font-bold">Crear cuenta</h1>
         </div>
 
@@ -91,9 +91,9 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-sm text-neutral-500">
           ¿Ya tienes cuenta?{" "}
-          <a href="/login" className="text-primary hover:underline">
+          <a href="/login" className="text-brand-600 hover:underline">
             Iniciar sesión
           </a>
         </div>

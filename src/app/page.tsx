@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Ticket, Plus, Users, FolderOpen, BarChart3 } from "lucide-react"
 
 export default async function Home() {
@@ -37,7 +36,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6 flex items-center gap-3">
-              <Ticket size={24} className="text-blue-600" />
+              <Ticket size={24} className="text-brand-600" />
               <div>
                 <p className="text-2xl font-bold">{total}</p>
                 <p className="text-sm text-gray-500">Total tickets</p>
@@ -77,7 +76,7 @@ export default async function Home() {
           <Link href="/tickets">
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="pt-6 flex items-center gap-3">
-                <Ticket size={24} className="text-blue-600" />
+              <Ticket size={24} className="text-brand-600" />
                 <div>
                   <h3 className="font-semibold">Ver Tickets</h3>
                   <p className="text-sm text-gray-500">Gestionar tickets</p>
@@ -119,7 +118,7 @@ export default async function Home() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardContent className="pt-6 flex items-center gap-3">
-            <Ticket size={24} className="text-blue-600" />
+            <Ticket size={24} className="text-brand-600" />
             <div>
               <p className="text-2xl font-bold">{total}</p>
               <p className="text-sm text-gray-500">Totales</p>
@@ -159,7 +158,7 @@ export default async function Home() {
         <Link href="/tickets">
           <Card className="cursor-pointer hover:shadow-md transition-shadow">
             <CardContent className="pt-6 flex items-center gap-3">
-              <Ticket size={24} className="text-blue-600" />
+              <Ticket size={24} className="text-brand-600" />
               <div>
                 <h3 className="font-semibold">Mis Tickets</h3>
                 <p className="text-sm text-gray-500">Ver y dar seguimiento</p>

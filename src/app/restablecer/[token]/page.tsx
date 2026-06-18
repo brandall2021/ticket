@@ -61,7 +61,7 @@ export default function RestablecerPage({
         <Card className="w-full max-w-sm p-6 text-center space-y-4">
           <Lock className="h-10 w-10 text-green-500 mx-auto" />
           <h1 className="text-2xl font-bold">Contraseña actualizada</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-neutral-500">
             Redirigiendo al inicio de sesión...
           </p>
         </Card>
@@ -73,7 +73,7 @@ export default function RestablecerPage({
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-sm p-6 space-y-6">
         <div className="flex flex-col items-center gap-2">
-          <Lock className="h-10 w-10 text-primary" />
+          <Lock className="h-10 w-10 text-brand-600" />
           <h1 className="text-2xl font-bold">Nueva contraseña</h1>
         </div>
 

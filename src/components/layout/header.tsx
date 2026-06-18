@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth, signOut } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 
@@ -12,26 +13,30 @@ export async function Header() {
   const session = await auth();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-8">
-          <Link
-            href="/"
-            className="text-lg font-bold tracking-tight text-neutral-900"
-          >
-            Helpdesk
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="Helpdesk"
+              width={130}
+              height={36}
+              className="h-9 w-auto"
+              priority
+            />
           </Link>
-          <nav className="hidden items-center gap-6 sm:flex">
+          <nav className="hidden items-center gap-1 sm:flex">
             <Link
               href="/tickets"
-              className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
             >
               Tickets
             </Link>
             {session?.user?.role && ["ADMIN", "AGENT"].includes(session.user.role) && (
               <Link
                 href="/admin"
-                className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
               >
                 Admin
               </Link>
@@ -57,18 +62,18 @@ export async function Header() {
               >
                 <button
                   type="submit"
-                  className="text-sm text-neutral-500 underline-offset-2 hover:text-neutral-900 hover:underline"
+                  className="text-sm font-medium text-neutral-500 underline-offset-2 transition-colors hover:text-brand-600 hover:underline"
                 >
-                  Logout
+                  Salir
                 </button>
               </form>
             </>
           ) : (
             <Link
               href="/login"
-              className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-brand-600 px-4 text-sm font-medium text-white transition-all duration-200 hover:bg-brand-700 active:scale-[0.98]"
             >
-              Sign in
+              Ingresar
             </Link>
           )}
         </div>

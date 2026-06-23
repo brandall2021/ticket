@@ -11,7 +11,8 @@ export async function GET() {
   }
 
   const items = await prisma.stockItem.findMany({
-    orderBy: [{ tipo: "asc" }, { nombre: "asc" }],
+    include: { categoria: true },
+    orderBy: [{ categoria: { nombre: "asc" } }, { nombre: "asc" }],
   })
 
   return NextResponse.json(items)
@@ -23,19 +24,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const { tipo, nombre, cantidad } = await req.json()
+  const { categoriaId, nombre, cantidad } = await req.json()
 
-  if (!tipo || !nombre) {
-    return NextResponse.json({ error: "Tipo y nombre requeridos" }, { status: 400 })
+  if (!categoriaId || !nombre) {
+    return NextResponse.json({ error: "Categoría y nombre requeridos" }, { status: 400 })
   }
 
-  const tiposValidos = ["TONER", "MOUSE", "TECLADO", "FUENTE"]
-  if (!tiposValidos.includes(tipo)) {
-    return NextResponse.json({ error: "Tipo inválido" }, { status: 400 })
+  const cat = await prisma.stockCategoria.findUnique({ where: { id: categoriaId } })
+  if (!cat) {
+    return NextResponse.json({ error: "Categoría no encontrada" }, { status: 400 })
   }
 
   const item = await prisma.stockItem.create({
-    data: { tipo, nombre, cantidad: cantidad ?? 0 },
+    data: { categoriaId, nombre, cantidad: cantidad ?? 0 },
+    include: { categoria: true },
   })
 
   return NextResponse.json(item, { status: 201 })

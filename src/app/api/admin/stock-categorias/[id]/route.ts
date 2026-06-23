@@ -14,20 +14,16 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const { nombre, cantidad, categoriaId } = await req.json()
+  const { nombre, color, icono, activo } = await req.json()
 
   const data: Record<string, unknown> = {}
   if (nombre !== undefined) data.nombre = nombre
-  if (categoriaId !== undefined) data.categoriaId = categoriaId
-  if (cantidad !== undefined) data.cantidad = cantidad
+  if (color !== undefined) data.color = color
+  if (icono !== undefined) data.icono = icono
+  if (activo !== undefined) data.activo = activo
 
-  const item = await prisma.stockItem.update({
-    where: { id },
-    data,
-    include: { categoria: true },
-  })
-
-  return NextResponse.json(item)
+  const categoria = await prisma.stockCategoria.update({ where: { id }, data })
+  return NextResponse.json(categoria)
 }
 
 export async function DELETE(
@@ -40,7 +36,15 @@ export async function DELETE(
   }
 
   const { id } = await params
-  await prisma.stockItem.delete({ where: { id } })
 
+  const count = await prisma.stockItem.count({ where: { categoriaId: id } })
+  if (count > 0) {
+    return NextResponse.json(
+      { error: `No se puede eliminar: ${count} item(s) usan esta categoría` },
+      { status: 400 }
+    )
+  }
+
+  await prisma.stockCategoria.delete({ where: { id } })
   return NextResponse.json({ success: true })
 }

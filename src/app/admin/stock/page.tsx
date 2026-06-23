@@ -2,48 +2,56 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Printer, Mouse, Keyboard, Power, Package } from "lucide-react"
+import { Plus, Trash2, Package, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
+
+interface Categoria {
+  id: string
+  nombre: string
+  color: string
+  icono: string
+}
 
 interface StockItem {
   id: string
-  tipo: string
   nombre: string
   cantidad: number
+  categoriaId: string
+  categoria: Categoria
   createdAt: string
   updatedAt: string
-}
-
-const tipoConfig: Record<string, { label: string; icon: typeof Printer; color: string }> = {
-  TONER: { label: "Tóner", icon: Printer, color: "text-blue-600 dark:text-blue-400" },
-  MOUSE: { label: "Mouse", icon: Mouse, color: "text-green-600 dark:text-green-400" },
-  TECLADO: { label: "Teclado", icon: Keyboard, color: "text-purple-600 dark:text-purple-400" },
-  FUENTE: { label: "Fuente", icon: Power, color: "text-orange-600 dark:text-orange-400" },
 }
 
 export default function AdminStockPage() {
   const router = useRouter()
   const [items, setItems] = useState<StockItem[]>([])
+  const [categorias, setCategorias] = useState<Categoria[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [tipo, setTipo] = useState("TONER")
+  const [categoriaId, setCategoriaId] = useState("")
   const [nombre, setNombre] = useState("")
   const [cantidad, setCantidad] = useState("1")
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState("")
 
-  useEffect(() => {
-    fetchItems()
-  }, [])
+  const [showCatForm, setShowCatForm] = useState(false)
+  const [catNombre, setCatNombre] = useState("")
+  const [catColor, setCatColor] = useState("#3b82f6")
+  const [creandoCat, setCreandoCat] = useState(false)
+  const [catError, setCatError] = useState("")
 
-  async function fetchItems() {
-    const res = await fetch("/api/admin/stock")
-    const data = await res.json()
-    setItems(data)
+  useEffect(() => { fetchAll() }, [])
+
+  async function fetchAll() {
+    const [itemsRes, catsRes] = await Promise.all([
+      fetch("/api/admin/stock"),
+      fetch("/api/admin/stock-categorias"),
+    ])
+    setItems(await itemsRes.json())
+    setCategorias(await catsRes.json())
     setLoading(false)
   }
 
@@ -55,7 +63,7 @@ export default function AdminStockPage() {
     const res = await fetch("/api/admin/stock", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tipo, nombre, cantidad: parseInt(cantidad) || 0 }),
+      body: JSON.stringify({ categoriaId, nombre, cantidad: parseInt(cantidad) || 0 }),
     })
 
     if (!res.ok) {
@@ -68,33 +76,74 @@ export default function AdminStockPage() {
     setNombre("")
     setCantidad("1")
     setCreating(false)
-    fetchItems()
+    fetchAll()
   }
 
   async function updateCantidad(item: StockItem, newCantidad: number) {
     if (newCantidad < 0) newCantidad = 0
-    await fetch(`/api/admin/stock/${item.id}`, {
+    const res = await fetch(`/api/admin/stock/${item.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cantidad: newCantidad }),
     })
-    fetchItems()
+    if (res.ok) {
+      const updated = await res.json()
+      setItems(prev => prev.map(i => i.id === updated.id ? updated : i))
+    }
   }
 
   async function deleteItem(id: string) {
     if (!confirm("¿Eliminar este item?")) return
-    await fetch(`/api/admin/stock/${id}`, { method: "DELETE" })
-    fetchItems()
+    const res = await fetch(`/api/admin/stock/${id}`, { method: "DELETE" })
+    if (res.ok) {
+      setItems(prev => prev.filter(i => i.id !== id))
+    }
+  }
+
+  async function handleCreateCat(e: React.FormEvent) {
+    e.preventDefault()
+    setCreandoCat(true)
+    setCatError("")
+
+    const res = await fetch("/api/admin/stock-categorias", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre: catNombre, color: catColor }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      setCatError(data.error || "Error al crear categoría")
+      setCreandoCat(false)
+      return
+    }
+
+    setCatNombre("")
+    setCatColor("#3b82f6")
+    setCreandoCat(false)
+    setShowCatForm(false)
+    fetchAll()
+  }
+
+  async function deleteCategoria(id: string) {
+    const res = await fetch(`/api/admin/stock-categorias/${id}`, { method: "DELETE" })
+    if (!res.ok) {
+      const data = await res.json()
+      alert(data.error || "Error al eliminar")
+      return
+    }
+    fetchAll()
   }
 
   const agrupados = items.reduce<Record<string, StockItem[]>>((acc, item) => {
-    if (!acc[item.tipo]) acc[item.tipo] = []
-    acc[item.tipo].push(item)
+    const key = item.categoria?.id || "sin-categoria"
+    if (!acc[key]) acc[key] = []
+    acc[key].push(item)
     return acc
   }, {})
 
   if (loading) {
-    return <div className="mx-auto max-w-5xl p-6 text-neutral-500 dark:text-neutral-400">Cargando...</div>
+    return <div className="mx-auto max-w-5xl p-6 text-neutral-500">Cargando...</div>
   }
 
   return (
@@ -107,19 +156,63 @@ export default function AdminStockPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Agregar Item</CardTitle>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowCatForm(!showCatForm)}>
+              <Settings className="h-4 w-4" />
+              Categorías
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {showCatForm && (
+            <form onSubmit={handleCreateCat} className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 space-y-3 dark:border-navy-600 dark:bg-navy-700/50">
+              <h4 className="font-medium text-sm">Nueva categoría</h4>
+              {catError && <p className="text-sm text-red-500">{catError}</p>}
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="flex-1 min-w-[160px] space-y-1">
+                  <Label htmlFor="catNombre">Nombre</Label>
+                  <Input id="catNombre" value={catNombre} onChange={e => setCatNombre(e.target.value)} placeholder="Ej: Tóner, Mouse..." required />
+                </div>
+                <div className="w-20 space-y-1">
+                  <Label htmlFor="catColor">Color</Label>
+                  <input id="catColor" type="color" value={catColor} onChange={e => setCatColor(e.target.value)} className="h-9 w-full rounded-md border border-neutral-300 bg-white p-0.5 dark:border-navy-500 dark:bg-navy-800" />
+                </div>
+                <Button type="submit" size="sm" disabled={creandoCat}>
+                  {creandoCat ? "..." : "Crear"}
+                </Button>
+              </div>
+              {categorias.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-200 dark:border-navy-600">
+                  {categorias.map(cat => (
+                    <div key={cat.id} className="flex items-center gap-1 rounded-full border px-3 py-1 text-xs" style={{ borderColor: cat.color, color: cat.color }}>
+                      {cat.nombre}
+                      <button onClick={() => deleteCategoria(cat.id)} className="ml-1 hover:text-red-500">
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </form>
+          )}
+
           <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
-            <div className="w-32 space-y-1">
-              <Label htmlFor="tipo">Tipo</Label>
-              <Select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                <option value="TONER">Tóner</option>
-                <option value="MOUSE">Mouse</option>
-                <option value="TECLADO">Teclado</option>
-                <option value="FUENTE">Fuente</option>
-              </Select>
+            <div className="w-40 space-y-1">
+              <Label htmlFor="categoria">Categoría</Label>
+              <select
+                id="categoria"
+                value={categoriaId}
+                onChange={(e) => setCategoriaId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-neutral-300 bg-white px-3 py-1 text-sm dark:border-navy-500 dark:bg-navy-800 dark:text-neutral-100"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                {categorias.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                ))}
+              </select>
             </div>
             <div className="min-w-[200px] flex-1 space-y-1">
               <Label htmlFor="nombre">Nombre</Label>
@@ -134,32 +227,31 @@ export default function AdminStockPage() {
               {creating ? "Agregando..." : "Agregar"}
             </Button>
           </form>
-          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-red-500">{error}</p>}
         </CardContent>
       </Card>
 
-      {Object.entries(tipoConfig).map(([tipoKey, cfg]) => {
-        const tipoItems = agrupados[tipoKey] || []
-        const Icon = cfg.icon
-        const total = tipoItems.reduce((sum, i) => sum + i.cantidad, 0)
+      {categorias.map(cat => {
+        const catItems = agrupados[cat.id] || []
+        const total = catItems.reduce((sum, i) => sum + i.cantidad, 0)
 
         return (
-          <Card key={tipoKey}>
+          <Card key={cat.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Icon className={`h-5 w-5 ${cfg.color}`} />
-                {cfg.label}
-                <span className="ml-auto text-sm font-normal text-neutral-500 dark:text-neutral-400">
+                <Package className="h-5 w-5" style={{ color: cat.color }} />
+                {cat.nombre}
+                <span className="ml-auto text-sm font-normal text-neutral-500">
                   Total: {total}
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {tipoItems.length === 0 ? (
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">Sin items</p>
+              {catItems.length === 0 ? (
+                <p className="text-sm text-neutral-500">Sin items</p>
               ) : (
                 <div className="space-y-2">
-                  {tipoItems.map((item) => (
+                  {catItems.map((item) => (
                     <div
                       key={item.id}
                       className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-navy-600 dark:bg-navy-700/50"
@@ -202,6 +294,14 @@ export default function AdminStockPage() {
           </Card>
         )
       })}
+
+      {categorias.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center text-neutral-500">
+            No hay categorías de stock. Creá una usando el botón "Categorías".
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -61,6 +61,25 @@ async function main() {
   }
   console.log(`  ✓ ${categorias.length} categorías`)
 
+  const stockCategorias = [
+    { nombre: "Tóner", color: "#2563EB" },
+    { nombre: "Mouse", color: "#16A34A" },
+    { nombre: "Teclado", color: "#9333EA" },
+    { nombre: "Fuente", color: "#EA580C" },
+    { nombre: "Monitor", color: "#0891B2" },
+    { nombre: "Cable", color: "#DC2626" },
+    { nombre: "Disco", color: "#4F46E5" },
+  ]
+
+  for (const cat of stockCategorias) {
+    await prisma.stockCategoria.upsert({
+      where: { nombre: cat.nombre },
+      update: {},
+      create: cat,
+    })
+  }
+  console.log(`  ✓ ${stockCategorias.length} categorías de stock`)
+
   console.log("")
   console.log("  Credenciales:")
   console.log(`  Admin:  admin@helpdesk.com / admin123`)

@@ -133,13 +133,28 @@ model AuditLog {
   @@index([fecha])
 }
 
+model StockCategoria {
+  id        String      @id @default(cuid())
+  nombre    String      @unique
+  color     String      @default("#3b82f6")
+  icono     String      @default("Package")
+  activo    Boolean     @default(true)
+  createdAt DateTime    @default(now())
+
+  items     StockItem[]
+
+  @@index([activo])
+}
+
 model StockItem {
   id        String   @id @default(cuid())
-  tipo      String
   nombre    String
   cantidad  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([tipo])
+  categoriaId String
+  categoria   StockCategoria @relation(fields: [categoriaId], references: [id])
+
+  @@index([categoriaId])
 }

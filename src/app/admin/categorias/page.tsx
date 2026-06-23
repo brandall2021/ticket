@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Circle, ToggleLeft, ToggleRight } from "lucide-react"
+import { Plus, Circle, ToggleLeft, ToggleRight, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,9 @@ export default function AdminCategoriasPage() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState("")
+  const [editando, setEditando] = useState<string | null>(null)
+  const [editNombre, setEditNombre] = useState("")
+  const [editColor, setEditColor] = useState("#3B82F6")
 
   useEffect(() => {
     fetch("/api/admin/categorias")
@@ -73,6 +76,32 @@ export default function AdminCategoriasPage() {
     setNombre("")
     setColor("#3B82F6")
     setCreating(false)
+  }
+
+  function startEdit(cat: Categoria) {
+    setEditando(cat.id)
+    setEditNombre(cat.nombre)
+    setEditColor(cat.color)
+  }
+
+  function cancelEdit() {
+    setEditando(null)
+  }
+
+  async function saveEdit(catId: string) {
+    const res = await fetch(`/api/admin/categorias/${catId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre: editNombre, color: editColor }),
+    })
+
+    if (res.ok) {
+      const updated = await res.json()
+      setCategorias((prev) =>
+        prev.map((c) => (c.id === catId ? { ...c, ...updated } : c))
+      )
+      setEditando(null)
+    }
   }
 
   async function toggleActivo(cat: Categoria) {
@@ -173,41 +202,108 @@ export default function AdminCategoriasPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {categorias.map((cat) => (
-                    <tr key={cat.id} className="border-b last:border-0">
-                      <td className="py-3 pr-4">{cat.nombre}</td>
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="inline-block h-4 w-4 rounded-full border"
-                            style={{ backgroundColor: cat.color }}
-                          />
-                          <span className="text-neutral-500">{cat.color}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <Badge variant={cat.activo ? "success" : "outline"}>
-                          {cat.activo ? "Activo" : "Inactivo"}
-                        </Badge>
-                      </td>
-                      <td className="py-3 text-neutral-500">{formatDate(cat.createdAt)}</td>
-                      <td className="py-3">
-                        <button
-                          type="button"
-                          onClick={() => toggleActivo(cat)}
-                          className="flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-brand-600"
-                          title={cat.activo ? "Dar de baja" : "Activar"}
-                        >
-                          {cat.activo ? (
-                            <ToggleRight className="h-5 w-5 text-green-500" />
+                  {categorias.map((cat) => {
+                    const editing = editando === cat.id
+                    return (
+                      <tr key={cat.id} className="border-b last:border-0">
+                        <td className="py-3 pr-4">
+                          {editing ? (
+                            <Input
+                              value={editNombre}
+                              onChange={(e) => setEditNombre(e.target.value)}
+                              className="h-8 text-sm"
+                            />
                           ) : (
-                            <ToggleLeft className="h-5 w-5 text-neutral-400" />
+                            cat.nombre
                           )}
-                          {cat.activo ? "Dar de baja" : "Activar"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="py-3 pr-4">
+                          {editing ? (
+                            <div className="flex gap-1">
+                              {colorOptions.map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => setEditColor(opt.value)}
+                                  className="rounded-full p-0.5 transition-transform hover:scale-110"
+                                >
+                                  <Circle
+                                    className="h-5 w-5"
+                                    style={{
+                                      fill: opt.value,
+                                      color: opt.value,
+                                      stroke: editColor === opt.value ? "#0f172a" : "transparent",
+                                      strokeWidth: editColor === opt.value ? 2 : 0,
+                                    }}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="inline-block h-4 w-4 rounded-full border"
+                                style={{ backgroundColor: cat.color }}
+                              />
+                              <span className="text-neutral-500">{cat.color}</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <Badge variant={cat.activo ? "success" : "outline"}>
+                            {cat.activo ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </td>
+                        <td className="py-3 text-neutral-500">{formatDate(cat.createdAt)}</td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-2">
+                            {editing ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => saveEdit(cat.id)}
+                                  className="text-sm font-medium text-green-600 hover:text-green-700"
+                                >
+                                  Guardar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={cancelEdit}
+                                  className="text-sm text-neutral-500 hover:text-neutral-700"
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => startEdit(cat)}
+                                  className="flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-brand-600"
+                                  title="Editar"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleActivo(cat)}
+                                  className="flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-brand-600"
+                                  title={cat.activo ? "Dar de baja" : "Activar"}
+                                >
+                                  {cat.activo ? (
+                                    <ToggleRight className="h-5 w-5 text-green-500" />
+                                  ) : (
+                                    <ToggleLeft className="h-5 w-5 text-neutral-400" />
+                                  )}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

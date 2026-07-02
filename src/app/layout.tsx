@@ -19,6 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Header />
           <main className="flex-1">{children}</main>
+          <footer className="border-t border-neutral-200 bg-white py-4 text-center text-sm text-neutral-500 dark:border-navy-700 dark:bg-navy-800 dark:text-neutral-400">
+            &copy; 2026 softgroup.com.ar
+          </footer>
         </ThemeProvider>
       </body>
     </html>

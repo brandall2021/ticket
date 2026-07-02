@@ -109,7 +109,23 @@ export default function AdminUsuariosPage() {
   }
 
   if (loading) {
-    return <div className="mx-auto max-w-5xl p-6 text-neutral-500">Cargando...</div>
+    return (
+      <div className="mx-auto max-w-5xl p-6">
+        <div className="mb-6 h-8 w-32 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+        <div className="rounded-lg border border-neutral-200 p-6 dark:border-navy-700">
+          <div className="mb-4 h-6 w-36 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+          <div className="h-10 w-full animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+        </div>
+        <div className="mt-6 rounded-lg border border-neutral-200 p-6 dark:border-navy-700">
+          <div className="mb-4 h-6 w-44 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-8 w-full animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -87,7 +87,7 @@ function LoginForm() {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500">O continúa con</span>
+          <span className="bg-white px-2 text-gray-500 dark:bg-navy-900 dark:text-neutral-400">O continúa con</span>
         </div>
       </div>
 

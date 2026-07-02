@@ -3,24 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-
-const validTransitions: Record<string, string[]> = {
-  NUEVO: ["ASIGNADO"],
-  ASIGNADO: ["EN_PROGRESO"],
-  EN_PROGRESO: ["RESUELTO"],
-  RESUELTO: ["CERRADO"],
-  CERRADO: ["REABIERTO"],
-  REABIERTO: ["ASIGNADO"],
-}
-
-const statusLabels: Record<string, string> = {
-  NUEVO: "Nuevo",
-  ASIGNADO: "Asignado",
-  EN_PROGRESO: "En Progreso",
-  RESUELTO: "Resuelto",
-  CERRADO: "Cerrado",
-  REABIERTO: "Reabierto",
-}
+import { STATUS_TRANSITIONS, STATUS_LABELS } from "@/lib/constants"
 
 interface TicketActionsProps {
   ticketId: string
@@ -30,17 +13,26 @@ interface TicketActionsProps {
 export function TicketActions({ ticketId, currentStatus }: TicketActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState("")
 
-  const nextStatuses = validTransitions[currentStatus] || []
+  const nextStatuses = STATUS_TRANSITIONS[currentStatus] || []
 
   async function handleStatusChange(newStatus: string) {
     setLoading(newStatus)
+    setError("")
 
-    await fetch(`/api/tickets/${ticketId}`, {
+    const res = await fetch(`/api/tickets/${ticketId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     })
+
+    if (!res.ok) {
+      const data = await res.json()
+      setError(data.error || "Error al cambiar estado")
+      setLoading(null)
+      return
+    }
 
     setLoading(null)
     router.refresh()
@@ -49,18 +41,21 @@ export function TicketActions({ ticketId, currentStatus }: TicketActionsProps) {
   if (nextStatuses.length === 0) return null
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {nextStatuses.map((status) => (
-        <Button
-          key={status}
-          variant="outline"
-          size="sm"
-          onClick={() => handleStatusChange(status)}
-          disabled={loading !== null}
-        >
-          {loading === status ? "..." : `→ ${statusLabels[status] || status}`}
-        </Button>
-      ))}
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {nextStatuses.map((status) => (
+          <Button
+            key={status}
+            variant="outline"
+            size="sm"
+            onClick={() => handleStatusChange(status)}
+            disabled={loading !== null}
+          >
+            {loading === status ? "..." : `→ ${STATUS_LABELS[status] || status}`}
+          </Button>
+        ))}
+      </div>
+      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
     </div>
   )
 }

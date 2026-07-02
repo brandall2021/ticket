@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { requireRole } from "@/lib/api-auth"
+import { ROLES_ADMIN_AGENT } from "@/lib/constants"
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "AGENT")) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireRole(ROLES_ADMIN_AGENT)
+  if (authResult.error) return authResult.error
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

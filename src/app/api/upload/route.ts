@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { requireAuth } from "@/lib/api-auth"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireAuth()
+  if (authResult.error) return authResult.error
 
   const formData = await req.formData()
   const files = formData.getAll("archivos") as File[]

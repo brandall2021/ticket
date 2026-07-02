@@ -8,28 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-
-const statusColors: Record<
-  string,
-  "default" | "secondary" | "destructive" | "success" | "warning" | "outline"
-> = {
-  NUEVO: "default",
-  ASIGNADO: "secondary",
-  EN_PROGRESO: "warning",
-  RESUELTO: "success",
-  CERRADO: "outline",
-  REABIERTO: "destructive",
-}
-
-const prioridadColors: Record<
-  string,
-  "default" | "secondary" | "destructive" | "success" | "warning" | "outline"
-> = {
-  BAJA: "secondary",
-  MEDIA: "default",
-  ALTA: "warning",
-  CRITICA: "destructive",
-}
+import { STATUS_COLORS, PRIORIDAD_COLORS } from "@/lib/constants"
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })
@@ -38,14 +17,18 @@ function formatDate(date: Date) {
 export default async function TicketsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; prioridad?: string; q?: string }>
+  searchParams: Promise<{ status?: string; prioridad?: string; q?: string; page?: string }>
 }) {
   const session = await auth()
   if (!session?.user) redirect("/login")
 
-  const { status, prioridad, q } = await searchParams
+  const { status, prioridad, q, page: pageStr } = await searchParams
   const isAdminOrAgent =
     session.user.role === "ADMIN" || session.user.role === "AGENT"
+
+  const page = Math.max(1, parseInt(pageStr || "1"))
+  const limit = 20
+  const skip = (page - 1) * limit
 
   const where: Record<string, unknown> = {}
   if (!isAdminOrAgent) {
@@ -55,15 +38,22 @@ export default async function TicketsPage({
   if (prioridad) where.prioridad = prioridad
   if (q) where.titulo = { contains: q, mode: "insensitive" }
 
-  const tickets = await prisma.ticket.findMany({
-    where,
-    include: {
-      cliente: { select: { name: true, email: true } },
-      agente: { select: { name: true } },
-      categoria: { select: { nombre: true, color: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  })
+  const [tickets, total] = await Promise.all([
+    prisma.ticket.findMany({
+      where,
+      include: {
+        cliente: { select: { name: true, email: true } },
+        agente: { select: { name: true } },
+        categoria: { select: { nombre: true, color: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.ticket.count({ where }),
+  ])
+
+  const pages = Math.ceil(total / limit)
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -118,49 +108,69 @@ export default async function TicketsPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {tickets.map((ticket) => (
-            <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-              <Card className="transition-colors hover:bg-neutral-50 dark:hover:bg-navy-700/50">
-                <CardContent className="flex items-start justify-between p-4">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold">{ticket.titulo}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge
-                        variant={statusColors[ticket.status] || "default"}
-                      >
-                        {ticket.status}
-                      </Badge>
-                      <Badge
-                        variant={
-                          prioridadColors[ticket.prioridad] || "default"
-                        }
-                      >
-                        {ticket.prioridad}
-                      </Badge>
-                      {ticket.categoria && (
+        <>
+          <div className="space-y-3">
+            {tickets.map((ticket) => (
+              <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
+                <Card className="transition-colors hover:bg-neutral-50 dark:hover:bg-navy-700/50">
+                  <CardContent className="flex items-start justify-between p-4">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">{ticket.titulo}</h3>
+                      <div className="flex flex-wrap gap-2">
                         <Badge
-                          style={{
-                            backgroundColor: ticket.categoria.color,
-                            color: "#fff",
-                          }}
+                          variant={STATUS_COLORS[ticket.status] || "default"}
                         >
-                          {ticket.categoria.nombre}
+                          {ticket.status}
                         </Badge>
-                      )}
+                        <Badge
+                          variant={
+                            PRIORIDAD_COLORS[ticket.prioridad] || "default"
+                          }
+                        >
+                          {ticket.prioridad}
+                        </Badge>
+                        {ticket.categoria && (
+                          <Badge
+                            style={{
+                              backgroundColor: ticket.categoria.color,
+                              color: "#fff",
+                            }}
+                          >
+                            {ticket.categoria.nombre}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right text-sm text-neutral-500">
-                    <p>{ticket.cliente.name}</p>
-                    {ticket.agente && <p>→ {ticket.agente.name}</p>}
-                    {ticket.ubicacion && <p className="text-xs">{ticket.ubicacion}</p>}
-                    <p>{formatDate(ticket.createdAt)}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                    <div className="text-right text-sm text-neutral-500">
+                      <p>{ticket.cliente.name}</p>
+                      {ticket.agente && <p>→ {ticket.agente.name}</p>}
+                      {ticket.ubicacion && <p className="text-xs">{ticket.ubicacion}</p>}
+                      <p>{formatDate(ticket.createdAt)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          {pages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              {page > 1 && (
+                <Link href={`/tickets?page=${page - 1}${status ? `&status=${status}` : ""}${prioridad ? `&prioridad=${prioridad}` : ""}${q ? `&q=${q}` : ""}`}>
+                  <Button variant="outline" size="sm">Anterior</Button>
+                </Link>
+              )}
+              <span className="text-sm text-neutral-500">
+                Página {page} de {pages}
+              </span>
+              {page < pages && (
+                <Link href={`/tickets?page=${page + 1}${status ? `&status=${status}` : ""}${prioridad ? `&prioridad=${prioridad}` : ""}${q ? `&q=${q}` : ""}`}>
+                  <Button variant="outline" size="sm">Siguiente</Button>
+                </Link>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

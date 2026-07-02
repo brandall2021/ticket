@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-
-const rolesPermitidos = ["ADMIN", "AGENT"]
+import { requireRole } from "@/lib/api-auth"
+import { ROLES_ADMIN_AGENT } from "@/lib/constants"
+import { crearStockCategoriaSchema } from "@/lib/schemas"
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user || !rolesPermitidos.includes(session.user.role)) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireRole(ROLES_ADMIN_AGENT)
+  if (authResult.error) return authResult.error
 
   const categorias = await prisma.stockCategoria.findMany({
     where: { activo: true },
@@ -19,24 +17,22 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user || !rolesPermitidos.includes(session.user.role)) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+  const authResult = await requireRole(ROLES_ADMIN_AGENT)
+  if (authResult.error) return authResult.error
+
+  const body = await req.json()
+  const parsed = crearStockCategoriaSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors }, { status: 400 })
   }
 
-  const { nombre, color, icono } = await req.json()
-
-  if (!nombre) {
-    return NextResponse.json({ error: "Nombre requerido" }, { status: 400 })
-  }
-
-  const existe = await prisma.stockCategoria.findUnique({ where: { nombre } })
+  const existe = await prisma.stockCategoria.findUnique({ where: { nombre: parsed.data.nombre } })
   if (existe) {
     return NextResponse.json({ error: "Ya existe una categoría con ese nombre" }, { status: 400 })
   }
 
   const categoria = await prisma.stockCategoria.create({
-    data: { nombre, color: color || "#3b82f6", icono: icono || "Package" },
+    data: { nombre: parsed.data.nombre, color: parsed.data.color || "#3b82f6", icono: parsed.data.icono || "Package" },
   })
 
   return NextResponse.json(categoria, { status: 201 })

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { requireRole } from "@/lib/api-auth"
+import { ROLES } from "@/lib/constants"
+import { crearCategoriaSchema } from "@/lib/schemas"
 
 export async function GET() {
   const categorias = await prisma.categoria.findMany({
@@ -12,19 +14,17 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireRole([ROLES.ADMIN])
+  if (authResult.error) return authResult.error
 
-  const { nombre, color } = await req.json()
-
-  if (!nombre) {
-    return NextResponse.json({ error: "Nombre requerido" }, { status: 400 })
+  const body = await req.json()
+  const parsed = crearCategoriaSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors }, { status: 400 })
   }
 
   const categoria = await prisma.categoria.create({
-    data: { nombre, color: color || "#3b82f6" },
+    data: { nombre: parsed.data.nombre, color: parsed.data.color || "#3b82f6" },
   })
 
   return NextResponse.json(categoria, { status: 201 })

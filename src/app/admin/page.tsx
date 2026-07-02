@@ -5,10 +5,11 @@ import Link from "next/link"
 import { Ticket, Users, FolderOpen, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ROLES_ADMIN_AGENT } from "@/lib/constants"
 
 export default async function AdminDashboard() {
   const session = await auth()
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "AGENT")) {
+  if (!session?.user || !ROLES_ADMIN_AGENT.includes(session.user.role)) {
     redirect("/login")
   }
 

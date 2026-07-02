@@ -33,7 +33,8 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error("[recuperar] Error:", err)
     return NextResponse.json({ success: true })
   }
 }

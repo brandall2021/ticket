@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-
-const rolesPermitidos = ["ADMIN", "AGENT"]
+import { requireRole } from "@/lib/api-auth"
+import { ROLES_ADMIN_AGENT } from "@/lib/constants"
+import { crearStockItemSchema } from "@/lib/schemas"
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user || !rolesPermitidos.includes(session.user.role)) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireRole(ROLES_ADMIN_AGENT)
+  if (authResult.error) return authResult.error
 
   const items = await prisma.stockItem.findMany({
     include: { categoria: true },
@@ -19,24 +17,22 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user || !rolesPermitidos.includes(session.user.role)) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+  const authResult = await requireRole(ROLES_ADMIN_AGENT)
+  if (authResult.error) return authResult.error
+
+  const body = await req.json()
+  const parsed = crearStockItemSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors }, { status: 400 })
   }
 
-  const { categoriaId, nombre, cantidad } = await req.json()
-
-  if (!categoriaId || !nombre) {
-    return NextResponse.json({ error: "Categoría y nombre requeridos" }, { status: 400 })
-  }
-
-  const cat = await prisma.stockCategoria.findUnique({ where: { id: categoriaId } })
+  const cat = await prisma.stockCategoria.findUnique({ where: { id: parsed.data.categoriaId } })
   if (!cat) {
     return NextResponse.json({ error: "Categoría no encontrada" }, { status: 400 })
   }
 
   const item = await prisma.stockItem.create({
-    data: { categoriaId, nombre, cantidad: cantidad ?? 0 },
+    data: { categoriaId: parsed.data.categoriaId, nombre: parsed.data.nombre, cantidad: parsed.data.cantidad ?? 0 },
     include: { categoria: true },
   })
 

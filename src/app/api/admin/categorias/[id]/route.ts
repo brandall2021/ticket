@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { requireRole } from "@/lib/api-auth"
+import { ROLES } from "@/lib/constants"
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireRole([ROLES.ADMIN])
+  if (authResult.error) return authResult.error
 
   const { id } = await params
   const { nombre, color, activo } = await req.json()
@@ -31,10 +30,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireRole([ROLES.ADMIN])
+  if (authResult.error) return authResult.error
 
   const { id } = await params
   await prisma.categoria.delete({ where: { id } })

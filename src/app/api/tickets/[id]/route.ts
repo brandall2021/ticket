@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit"
 import { sendEmail, ticketNotificationEmail } from "@/lib/email"
+import { requireAuth } from "@/lib/api-auth"
+import { actualizarTicketSchema } from "@/lib/schemas"
+import { STATUS_TRANSITIONS } from "@/lib/constants"
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireAuth()
+  if (authResult.error) return authResult.error
 
   const { id } = await params
 
@@ -33,7 +33,7 @@ export async function GET(
     return NextResponse.json({ error: "No encontrado" }, { status: 404 })
   }
 
-  if (session.user.role === "CLIENT" && ticket.clienteId !== session.user.id) {
+  if (authResult.session!.user.role === "CLIENT" && ticket.clienteId !== authResult.session!.user.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 })
   }
 
@@ -44,13 +44,16 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  }
+  const authResult = await requireAuth()
+  if (authResult.error) return authResult.error
 
   const { id } = await params
+
   const body = await req.json()
+  const parsed = actualizarTicketSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors }, { status: 400 })
+  }
 
   const existing = await prisma.ticket.findUnique({
     where: { id },
@@ -64,33 +67,40 @@ export async function PATCH(
   const data: Record<string, unknown> = {}
   const changes: string[] = []
 
-  if (body.titulo !== undefined) {
-    data.titulo = body.titulo
-    changes.push(`título: "${body.titulo}"`)
+  if (parsed.data.titulo !== undefined) {
+    data.titulo = parsed.data.titulo
+    changes.push(`título: "${parsed.data.titulo}"`)
   }
-  if (body.descripcion !== undefined) {
-    data.descripcion = body.descripcion
+  if (parsed.data.descripcion !== undefined) {
+    data.descripcion = parsed.data.descripcion
     changes.push("descripción actualizada")
   }
-  if (body.status !== undefined) {
-    data.status = body.status
-    changes.push(`estado: ${existing.status} → ${body.status}`)
+  if (parsed.data.status !== undefined) {
+    const allowed = STATUS_TRANSITIONS[existing.status]
+    if (!allowed?.includes(parsed.data.status)) {
+      return NextResponse.json(
+        { error: `Transición inválida: de ${existing.status} a ${parsed.data.status}` },
+        { status: 400 }
+      )
+    }
+    data.status = parsed.data.status
+    changes.push(`estado: ${existing.status} → ${parsed.data.status}`)
   }
-  if (body.prioridad !== undefined) {
-    data.prioridad = body.prioridad
-    changes.push(`prioridad: ${existing.prioridad} → ${body.prioridad}`)
+  if (parsed.data.prioridad !== undefined) {
+    data.prioridad = parsed.data.prioridad
+    changes.push(`prioridad: ${existing.prioridad} → ${parsed.data.prioridad}`)
   }
-  if (body.agenteId !== undefined) {
-    data.agenteId = body.agenteId
+  if (parsed.data.agenteId !== undefined) {
+    data.agenteId = parsed.data.agenteId
     changes.push("agente asignado")
   }
-  if (body.categoriaId !== undefined) {
-    data.categoriaId = body.categoriaId
+  if (parsed.data.categoriaId !== undefined) {
+    data.categoriaId = parsed.data.categoriaId
     changes.push("categoría cambiada")
   }
-  if (body.ubicacion !== undefined) {
-    data.ubicacion = body.ubicacion
-    changes.push(`ubicación: "${body.ubicacion}"`)
+  if (parsed.data.ubicacion !== undefined) {
+    data.ubicacion = parsed.data.ubicacion
+    changes.push(`ubicación: "${parsed.data.ubicacion}"`)
   }
 
   if (changes.length === 0) {
@@ -108,12 +118,12 @@ export async function PATCH(
   })
 
   await logAudit(
-    session.user.id,
+    authResult.session!.user.id,
     "MODIFICAR_TICKET",
     `Ticket ${id}: ${changes.join(", ")}`
   )
 
-  if (body.status && body.status !== existing.status) {
+  if (parsed.data.status && parsed.data.status !== existing.status) {
     const ticketUrl = `${
       process.env.NEXT_PUBLIC_URL || "http://localhost:3000"
     }/tickets/${id}`
@@ -122,7 +132,7 @@ export async function PATCH(
       to: existing.cliente.email,
       ...ticketNotificationEmail({
         titulo: existing.titulo,
-        status: body.status,
+        status: parsed.data.status,
         url: ticketUrl,
         nombre: existing.cliente.name,
       }),
@@ -133,7 +143,7 @@ export async function PATCH(
         to: ticket.agente.email,
         ...ticketNotificationEmail({
           titulo: existing.titulo,
-          status: body.status,
+          status: parsed.data.status,
           url: ticketUrl,
           nombre: ticket.agente.name,
         }),

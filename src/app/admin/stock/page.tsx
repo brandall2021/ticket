@@ -143,7 +143,25 @@ export default function AdminStockPage() {
   }, {})
 
   if (loading) {
-    return <div className="mx-auto max-w-5xl p-6 text-neutral-500">Cargando...</div>
+    return (
+      <div className="mx-auto max-w-5xl p-6">
+        <div className="mb-6 h-8 w-24 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+        <div className="rounded-lg border border-neutral-200 p-6 dark:border-navy-700">
+          <div className="mb-4 h-6 w-36 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+          <div className="h-10 w-full animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+        </div>
+        {[1, 2].map((i) => (
+          <div key={i} className="mt-6 rounded-lg border border-neutral-200 p-6 dark:border-navy-700">
+            <div className="mb-4 h-6 w-32 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+            <div className="space-y-2">
+              {[1, 2, 3].map((j) => (
+                <div key={j} className="h-12 w-full animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -298,7 +316,7 @@ export default function AdminStockPage() {
       {categorias.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center text-neutral-500">
-            No hay categorías de stock. Creá una usando el botón "Categorías".
+            No hay categorías de stock. Creá una usando el botón &ldquo;Categorías&rdquo;.
           </CardContent>
         </Card>
       )}

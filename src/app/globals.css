@@ -4,6 +4,9 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-expo: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;
   --color-brand-200: #bfdbfe;
@@ -64,4 +67,87 @@ body {
 ::selection {
   background-color: var(--color-brand-600);
   color: white;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-reveal {
+  opacity: 0;
+}
+
+.animate-reveal.revealed {
+  animation: reveal-up 400ms var(--ease-out-expo) forwards;
+}
+
+.animate-fade-in {
+  opacity: 0;
+}
+
+.animate-fade-in.revealed {
+  animation: fade-in 300ms var(--ease-out-expo) forwards;
+}
+
+.animate-scale-in {
+  opacity: 0;
+}
+
+.animate-scale-in.revealed {
+  animation: scale-in 250ms var(--ease-out-expo) forwards;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-hover {
+    transition: transform 200ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .card-hover:hover {
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px -5px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-reveal.revealed,
+  .animate-fade-in.revealed,
+  .animate-scale-in.revealed {
+    animation: none;
+    opacity: 1;
+  }
+
+  .card-hover {
+    transition: none;
+  }
+
+  .card-hover:hover {
+    transform: none;
+  }
 }

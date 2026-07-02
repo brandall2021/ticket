@@ -112,7 +112,7 @@ export default async function TicketsPage({
           <div className="space-y-3">
             {tickets.map((ticket) => (
               <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-                <Card className="transition-colors hover:bg-neutral-50 dark:hover:bg-navy-700/50">
+                <Card className="card-hover transition-colors hover:bg-neutral-50 dark:hover:bg-navy-700/50">
                   <CardContent className="flex items-start justify-between p-4">
                     <div className="space-y-2">
                       <h3 className="font-semibold">{ticket.titulo}</h3>

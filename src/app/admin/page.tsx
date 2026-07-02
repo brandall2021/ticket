@@ -55,7 +55,7 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-neutral-500">Total Tickets</CardTitle>
             <Ticket className="h-5 w-5 text-neutral-400" />
@@ -65,7 +65,7 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-neutral-500">Tickets Abiertos</CardTitle>
             <BarChart3 className="h-5 w-5 text-neutral-400" />
@@ -75,7 +75,7 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-neutral-500">Tickets Hoy</CardTitle>
             <Ticket className="h-5 w-5 text-neutral-400" />
@@ -85,7 +85,7 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-neutral-500">Agentes</CardTitle>
             <Users className="h-5 w-5 text-neutral-400" />
@@ -95,7 +95,7 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-neutral-500">Clientes</CardTitle>
             <Users className="h-5 w-5 text-neutral-400" />

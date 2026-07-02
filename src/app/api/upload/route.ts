@@ -20,7 +20,11 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    const ext = path.extname(file.name)
+    let ext = path.extname(file.name)
+    if (!ext) {
+      const mimeExt = file.type.split("/").pop()
+      ext = mimeExt ? `.${mimeExt}` : ".png"
+    }
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`
     const dir = path.join(process.cwd(), "public", "uploads")
     const filepath = path.join(dir, filename)
@@ -29,7 +33,7 @@ export async function POST(req: NextRequest) {
     await writeFile(filepath, buffer)
 
     uploaded.push({
-      nombre: file.name,
+      nombre: file.name || `imagen${ext}`,
       url: `/uploads/${filename}`,
     })
   }

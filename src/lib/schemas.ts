@@ -6,6 +6,7 @@ export const crearTicketSchema = z.object({
   prioridad: z.enum(["BAJA", "MEDIA", "ALTA", "CRITICA"]).optional(),
   categoriaId: z.string().nullable().optional(),
   ubicacion: z.string().nullable().optional(),
+  ipPc: z.string().nullable().optional(),
   archivos: z.array(z.object({ nombre: z.string(), url: z.string() })).optional(),
 })
 
@@ -17,6 +18,7 @@ export const actualizarTicketSchema = z.object({
   agenteId: z.string().nullable().optional(),
   categoriaId: z.string().nullable().optional(),
   ubicacion: z.string().nullable().optional(),
+  ipPc: z.string().nullable().optional(),
 })
 
 export const crearCategoriaSchema = z.object({

@@ -96,9 +96,10 @@ export default async function TicketDetailPage({
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <p className="whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
-            {ticket.descripcion}
-          </p>
+          <div
+            className="prose prose-sm max-w-none text-neutral-700 dark:prose-invert dark:text-neutral-300"
+            dangerouslySetInnerHTML={{ __html: ticket.descripcion }}
+          />
 
           <div className="grid grid-cols-2 gap-4 text-sm text-neutral-500">
             <div>
@@ -123,6 +124,12 @@ export default async function TicketDetailPage({
               <div>
                 <span className="font-medium text-neutral-900 dark:text-neutral-100">Ubicación:</span>{" "}
                 {ticket.ubicacion}
+              </div>
+            )}
+            {ticket.ipPc && (
+              <div>
+                <span className="font-medium text-neutral-900 dark:text-neutral-100">IP de PC:</span>{" "}
+                {ticket.ipPc}
               </div>
             )}
           </div>

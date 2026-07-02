@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
       descripcion: parsed.data.descripcion,
       prioridad: parsed.data.prioridad || "MEDIA",
       ubicacion: parsed.data.ubicacion || null,
+      ipPc: parsed.data.ipPc || null,
       categoriaId: parsed.data.categoriaId || null,
       clienteId: authResult.session!.user.id,
       status: "NUEVO",

@@ -58,6 +58,7 @@ model Ticket {
   status      TicketStatus @default(NUEVO)
   prioridad   Prioridad    @default(MEDIA)
   ubicacion   String?
+  ipPc        String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 

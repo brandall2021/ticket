@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Paperclip, X, Upload } from "lucide-react"
+import { Monitor, Paperclip, X, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select } from "@/components/ui/select"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 interface Categoria {
   id: string
@@ -29,6 +29,7 @@ export default function NuevoTicketPage() {
   const [prioridad, setPrioridad] = useState("MEDIA")
   const [categoriaId, setCategoriaId] = useState("")
   const [ubicacion, setUbicacion] = useState("")
+  const [ipPc, setIpPc] = useState("")
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [archivos, setArchivos] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
@@ -93,9 +94,10 @@ export default function NuevoTicketPage() {
         titulo,
         descripcion,
         prioridad,
-        categoriaId: categoriaId || null,
-        ubicacion: ubicacion || null,
-        archivos: archivosSubidos,
+          categoriaId: categoriaId || null,
+          ubicacion: ubicacion || null,
+          ipPc: ipPc || null,
+          archivos: archivosSubidos,
       }),
     })
 
@@ -140,13 +142,10 @@ export default function NuevoTicketPage() {
 
             <div className="space-y-2">
               <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea
-                id="descripcion"
+              <RichTextEditor
                 value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
+                onChange={setDescripcion}
                 placeholder="Describe el problema en detalle..."
-                rows={5}
-                required
               />
             </div>
 
@@ -188,6 +187,22 @@ export default function NuevoTicketPage() {
                 onChange={(e) => setUbicacion(e.target.value)}
                 placeholder="Ej: Oficina central, sucursal, domicilio..."
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ipPc" className="flex items-center gap-1.5">
+                <Monitor className="h-4 w-4 text-neutral-400" />
+                IP de la PC
+              </Label>
+              <Input
+                id="ipPc"
+                value={ipPc}
+                onChange={(e) => setIpPc(e.target.value)}
+                placeholder="Ej: 192.168.1.100"
+              />
+              <p className="text-xs text-neutral-400">
+                Ingresá la IP de la PC para acceso remoto
+              </p>
             </div>
 
             <div className="space-y-2">

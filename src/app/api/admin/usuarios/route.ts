@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES } from "@/lib/constants"
 import { crearUsuarioSchema } from "@/lib/schemas"
+import { sendEmail, nuevaCuentaEmail } from "@/lib/email"
 
 export async function GET() {
   const authResult = await requireRole([ROLES.ADMIN])
@@ -27,6 +28,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors }, { status: 400 })
   }
 
+  const notificar = body.notificar === true
+
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } })
   if (existing) {
     return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 })
@@ -43,6 +46,16 @@ export async function POST(req: NextRequest) {
     },
     select: { id: true, name: true, email: true, role: true, activo: true, createdAt: true },
   })
+
+  if (notificar) {
+    const { subject, html } = nuevaCuentaEmail({
+      nombre: parsed.data.name,
+      email: parsed.data.email,
+      password: parsed.data.password,
+      url: process.env.NEXTAUTH_URL || "http://localhost:3000",
+    })
+    await sendEmail({ to: parsed.data.email, subject, html })
+  }
 
   return NextResponse.json(user, { status: 201 })
 }

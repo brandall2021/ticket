@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Key, ToggleLeft, ToggleRight, Trash2, Shuffle } from "lucide-react"
+import { Plus, Key, ToggleLeft, ToggleRight, Trash2, Shuffle, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -47,6 +47,7 @@ export default function AdminUsuariosPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("CLIENT")
+  const [notificar, setNotificar] = useState(true)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState("")
 
@@ -83,7 +84,7 @@ export default function AdminUsuariosPage() {
     const res = await fetch("/api/admin/usuarios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password, role, notificar }),
     })
 
     if (!res.ok) {
@@ -97,6 +98,7 @@ export default function AdminUsuariosPage() {
     setEmail("")
     setPassword("")
     setRole("CLIENT")
+    setNotificar(true)
     setCreating(false)
     fetchUsuarios()
   }
@@ -203,6 +205,11 @@ export default function AdminUsuariosPage() {
                 <option value="ADMIN">Admin</option>
               </Select>
             </div>
+            <label className="flex items-center gap-2 pb-1 text-sm text-neutral-600 dark:text-neutral-400 cursor-pointer">
+              <input type="checkbox" checked={notificar} onChange={(e) => setNotificar(e.target.checked)} className="rounded border-neutral-300" />
+              <Mail className="h-4 w-4" />
+              Notificar por email
+            </label>
             <Button type="submit" disabled={creating}>
               <Plus className="h-4 w-4" />
               {creating ? "Creando..." : "Crear"}
@@ -291,10 +298,10 @@ export default function AdminUsuariosPage() {
                             <button
                               type="button"
                               onClick={() => setPasswordUserId(user.id)}
-                              className="flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-brand-600"
+                              className="text-neutral-500 transition-colors hover:text-brand-600"
+                              title="Cambiar contraseña"
                             >
                               <Key className="h-4 w-4" />
-                              Contraseña
                             </button>
                           )}
 
@@ -311,10 +318,10 @@ export default function AdminUsuariosPage() {
                             <button
                               type="button"
                               onClick={() => setDeletingId(user.id)}
-                              className="flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-red-600"
+                              className="text-neutral-500 transition-colors hover:text-red-600"
+                              title="Eliminar usuario"
                             >
                               <Trash2 className="h-4 w-4" />
-                              Eliminar
                             </button>
                           )}
                         </div>

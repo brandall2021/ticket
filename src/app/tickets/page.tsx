@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
+import { Prisma } from "@prisma/client"
 import { STATUS_COLORS, PRIORIDAD_COLORS } from "@/lib/constants"
 
 function formatDate(date: Date) {
@@ -17,12 +18,12 @@ function formatDate(date: Date) {
 export default async function TicketsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; prioridad?: string; q?: string; page?: string }>
+  searchParams: Promise<{ status?: string; prioridad?: string; q?: string; desde?: string; hasta?: string; page?: string }>
 }) {
   const session = await auth()
   if (!session?.user) redirect("/login")
 
-  const { status, prioridad, q, page: pageStr } = await searchParams
+  const { status, prioridad, q, desde, hasta, page: pageStr } = await searchParams
   const isAdminOrAgent =
     session.user.role === "ADMIN" || session.user.role === "AGENT"
 
@@ -30,13 +31,18 @@ export default async function TicketsPage({
   const limit = 20
   const skip = (page - 1) * limit
 
-  const where: Record<string, unknown> = {}
+  const where: Prisma.TicketWhereInput = {}
   if (!isAdminOrAgent) {
     where.clienteId = session.user.id
   }
-  if (status) where.status = status
-  if (prioridad) where.prioridad = prioridad
+  if (status) where.status = status as Prisma.TicketWhereInput["status"]
+  if (prioridad) where.prioridad = prioridad as Prisma.TicketWhereInput["prioridad"]
   if (q) where.titulo = { contains: q, mode: "insensitive" }
+  if (desde || hasta) {
+    where.createdAt = {}
+    if (desde) (where.createdAt as Record<string, unknown>).gte = new Date(desde)
+    if (hasta) (where.createdAt as Record<string, unknown>).lte = new Date(hasta + "T23:59:59.999Z")
+  }
 
   const [tickets, total] = await Promise.all([
     prisma.ticket.findMany({
@@ -94,6 +100,8 @@ export default async function TicketsPage({
             <option value="ALTA">Alta</option>
             <option value="CRITICA">Crítica</option>
           </Select>
+          <Input type="date" name="desde" defaultValue={desde} className="w-40" />
+          <Input type="date" name="hasta" defaultValue={hasta} className="w-40" />
         </div>
         <Button type="submit" variant="secondary" size="sm">
           <Search className="h-4 w-4" />
@@ -156,7 +164,7 @@ export default async function TicketsPage({
           {pages > 1 && (
             <div className="flex items-center justify-center gap-2">
               {page > 1 && (
-                <Link href={`/tickets?page=${page - 1}${status ? `&status=${status}` : ""}${prioridad ? `&prioridad=${prioridad}` : ""}${q ? `&q=${q}` : ""}`}>
+                <Link href={`/tickets?page=${page - 1}${status ? `&status=${status}` : ""}${prioridad ? `&prioridad=${prioridad}` : ""}${q ? `&q=${q}` : ""}${desde ? `&desde=${desde}` : ""}${hasta ? `&hasta=${hasta}` : ""}`}>
                   <Button variant="outline" size="sm">Anterior</Button>
                 </Link>
               )}
@@ -164,7 +172,7 @@ export default async function TicketsPage({
                 Página {page} de {pages}
               </span>
               {page < pages && (
-                <Link href={`/tickets?page=${page + 1}${status ? `&status=${status}` : ""}${prioridad ? `&prioridad=${prioridad}` : ""}${q ? `&q=${q}` : ""}`}>
+                <Link href={`/tickets?page=${page + 1}${status ? `&status=${status}` : ""}${prioridad ? `&prioridad=${prioridad}` : ""}${q ? `&q=${q}` : ""}${desde ? `&desde=${desde}` : ""}${hasta ? `&hasta=${hasta}` : ""}`}>
                   <Button variant="outline" size="sm">Siguiente</Button>
                 </Link>
               )}

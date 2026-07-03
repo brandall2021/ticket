@@ -145,7 +145,7 @@ export default function AdminUsuariosPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl p-6">
+      <div className="mx-auto max-w-7xl p-6">
         <div className="mb-6 h-8 w-32 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
         <div className="rounded-lg border border-neutral-200 p-6 dark:border-navy-700">
           <div className="mb-4 h-6 w-36 animate-pulse rounded bg-neutral-200 dark:bg-navy-700" />
@@ -164,7 +164,7 @@ export default function AdminUsuariosPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Usuarios</h1>
         <Button variant="outline" size="sm" onClick={() => router.push("/admin")}>
@@ -273,17 +273,18 @@ export default function AdminUsuariosPage() {
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="Nueva contraseña"
-                                className="h-7 w-32 text-xs"
+                                className="h-7 w-36 text-xs"
                                 minLength={6}
                               />
-                              <Button size="sm" variant="outline" className="h-7 w-7 shrink-0 p-0" onClick={handleGenerateNewPassword} title="Generar aleatoria">
+                              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleGenerateNewPassword}>
                                 <Shuffle className="h-3 w-3" />
+                                Aleatoria
                               </Button>
                               <Button size="sm" className="h-7 text-xs" onClick={() => handleChangePassword(user.id)} disabled={changingPassword || !newPassword}>
                                 Guardar
                               </Button>
                               <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setPasswordUserId(null); setNewPassword("") }}>
-                                X
+                                Cancelar
                               </Button>
                             </div>
                           ) : (

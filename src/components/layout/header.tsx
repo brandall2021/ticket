@@ -56,9 +56,9 @@ export async function Header() {
           <ThemeToggle />
           {session?.user ? (
             <>
-              <span className="hidden text-sm text-neutral-600 dark:text-neutral-300 sm:inline">
+              <Link href="/perfil" className="hidden text-sm text-neutral-600 transition-colors hover:text-brand-600 dark:text-neutral-300 dark:hover:text-brand-400 sm:inline">
                 {session.user.name ?? session.user.email}
-              </span>
+              </Link>
               {session.user.role && (
                 <Badge variant={roleBadgeVariant[session.user.role as keyof typeof roleBadgeVariant] ?? "secondary"}>
                   {session.user.role}
@@ -67,7 +67,7 @@ export async function Header() {
               <form
                 action={async () => {
                   "use server";
-                  await signOut({ redirectTo: "/login" });
+                  await signOut({ redirectTo: "/" });
                 }}
               >
                 <button

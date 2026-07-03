@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 interface CommentFormProps {
   ticketId: string
@@ -33,12 +33,11 @@ export function CommentForm({ ticketId }: CommentFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Textarea
+      <RichTextEditor
         value={contenido}
-        onChange={(e) => setContenido(e.target.value)}
+        onChange={setContenido}
         placeholder="Escribe un comentario..."
-        rows={3}
-        required
+        minHeight={120}
       />
       <Button type="submit" size="sm" disabled={submitting || !contenido.trim()}>
         {submitting ? "Enviando..." : "Comentar"}

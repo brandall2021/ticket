@@ -175,9 +175,10 @@ export default async function TicketDetailPage({
                     {formatDate(comment.createdAt)}
                   </span>
                 </div>
-                <p className="whitespace-pre-wrap text-sm text-neutral-700 dark:text-neutral-300">
-                  {comment.contenido}
-                </p>
+                <div
+                  className="prose prose-sm max-w-none text-neutral-700 dark:prose-invert dark:text-neutral-300"
+                  dangerouslySetInnerHTML={{ __html: comment.contenido }}
+                />
               </div>
             ))
           )}

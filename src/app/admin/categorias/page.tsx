@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Circle, ToggleLeft, ToggleRight, Pencil } from "lucide-react"
+import { Plus, Circle, ToggleLeft, ToggleRight, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -45,6 +45,7 @@ export default function AdminCategoriasPage() {
   const [editando, setEditando] = useState<string | null>(null)
   const [editNombre, setEditNombre] = useState("")
   const [editColor, setEditColor] = useState("#3B82F6")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/admin/categorias")
@@ -115,6 +116,14 @@ export default function AdminCategoriasPage() {
       setCategorias((prev) =>
         prev.map((c) => (c.id === cat.id ? { ...c, activo: !c.activo } : c))
       )
+    }
+  }
+
+  async function handleDelete(catId: string) {
+    const res = await fetch(`/api/admin/categorias/${catId}`, { method: "DELETE" })
+    if (res.ok) {
+      setCategorias((prev) => prev.filter((c) => c.id !== catId))
+      setDeletingId(null)
     }
   }
 
@@ -311,6 +320,33 @@ export default function AdminCategoriasPage() {
                                     <ToggleLeft className="h-5 w-5 text-neutral-400" />
                                   )}
                                 </button>
+                                {deletingId === cat.id ? (
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(cat.id)}
+                                      className="text-xs font-medium text-red-600 hover:text-red-700"
+                                    >
+                                      Confirmar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeletingId(null)}
+                                      className="text-xs text-neutral-500 hover:text-neutral-700"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeletingId(cat.id)}
+                                    className="text-neutral-500 transition-colors hover:text-red-600"
+                                    title="Eliminar categoría"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
                               </>
                             )}
                           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Key, ToggleLeft, ToggleRight, Trash2, Shuffle, Mail } from "lucide-react"
+import { Plus, Key, ToggleLeft, ToggleRight, Trash2, Shuffle, Mail, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -56,6 +56,7 @@ export default function AdminUsuariosPage() {
   const [changingPassword, setChangingPassword] = useState(false)
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [reenviandoId, setReenviandoId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchUsuarios()
@@ -133,6 +134,12 @@ export default function AdminUsuariosPage() {
       setNewPassword("")
     }
     setChangingPassword(false)
+  }
+
+  async function handleReenviar(userId: string) {
+    setReenviandoId(userId)
+    await fetch(`/api/admin/usuarios/${userId}/reenviar`, { method: "POST" })
+    setReenviandoId(null)
   }
 
   async function handleDelete(userId: string) {
@@ -304,6 +311,16 @@ export default function AdminUsuariosPage() {
                               <Key className="h-4 w-4" />
                             </button>
                           )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleReenviar(user.id)}
+                            disabled={reenviandoId === user.id}
+                            className="text-neutral-500 transition-colors hover:text-brand-600 disabled:opacity-50"
+                            title="Reenviar credenciales"
+                          >
+                            <Send className="h-4 w-4" />
+                          </button>
 
                           {deletingId === user.id ? (
                             <div className="flex items-center gap-1">

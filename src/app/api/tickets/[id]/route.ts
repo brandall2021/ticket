@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit"
 import { sendEmail, ticketNotificationEmail, ticketCerradoEmail } from "@/lib/email"
+import { requireRole } from "@/lib/api-auth"
 import { requireAuth } from "@/lib/api-auth"
 import { actualizarTicketSchema } from "@/lib/schemas"
 import { STATUS_TRANSITIONS } from "@/lib/constants"
@@ -38,6 +39,35 @@ export async function GET(
   }
 
   return NextResponse.json(ticket)
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authResult = await requireRole(["ADMIN"])
+  if (authResult.error) return authResult.error
+
+  const { id } = await params
+
+  const ticket = await prisma.ticket.findUnique({
+    where: { id },
+    select: { id: true, titulo: true },
+  })
+
+  if (!ticket) {
+    return NextResponse.json({ error: "No encontrado" }, { status: 404 })
+  }
+
+  await prisma.ticket.delete({ where: { id } })
+
+  await logAudit(
+    authResult.session!.user.id,
+    "ELIMINAR_TICKET",
+    `Ticket eliminado: ${ticket.titulo} (${id})`
+  )
+
+  return NextResponse.json({ success: true })
 }
 
 export async function PATCH(

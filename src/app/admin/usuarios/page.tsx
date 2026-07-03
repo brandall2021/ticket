@@ -56,6 +56,7 @@ export default function AdminUsuariosPage() {
   const [changingPassword, setChangingPassword] = useState(false)
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmReenviarId, setConfirmReenviarId] = useState<string | null>(null)
   const [reenviandoId, setReenviandoId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -137,7 +138,12 @@ export default function AdminUsuariosPage() {
   }
 
   async function handleReenviar(userId: string) {
+    setConfirmReenviarId(userId)
+  }
+
+  async function doReenviar(userId: string) {
     setReenviandoId(userId)
+    setConfirmReenviarId(null)
     await fetch(`/api/admin/usuarios/${userId}/reenviar`, { method: "POST" })
     setReenviandoId(null)
   }
@@ -312,15 +318,26 @@ export default function AdminUsuariosPage() {
                             </button>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={() => handleReenviar(user.id)}
-                            disabled={reenviandoId === user.id}
-                            className="text-neutral-500 transition-colors hover:text-brand-600 disabled:opacity-50"
-                            title="Reenviar credenciales"
-                          >
-                            <Send className="h-4 w-4" />
-                          </button>
+                          {confirmReenviarId === user.id ? (
+                            <div className="flex items-center gap-1">
+                              <Button size="sm" className="h-7 text-xs" onClick={() => doReenviar(user.id)} disabled={reenviandoId === user.id}>
+                                {reenviandoId === user.id ? "..." : "Confirmar"}
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setConfirmReenviarId(null)}>
+                                Cancelar
+                              </Button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleReenviar(user.id)}
+                              disabled={reenviandoId === user.id}
+                              className="text-neutral-500 transition-colors hover:text-brand-600 disabled:opacity-50"
+                              title="Reenviar credenciales"
+                            >
+                              <Send className="h-4 w-4" />
+                            </button>
+                          )}
 
                           {deletingId === user.id ? (
                             <div className="flex items-center gap-1">

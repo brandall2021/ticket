@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TicketActions } from "@/components/ticket-actions"
 import { CommentForm } from "@/components/comment-form"
 import { AssignAgent } from "@/components/assign-agent"
+import { DeleteTicket } from "@/components/delete-ticket"
 import { STATUS_COLORS, PRIORIDAD_COLORS, STATUS_LABELS } from "@/lib/constants"
 
 function formatDate(date: Date) {
@@ -154,6 +155,11 @@ export default async function TicketDetailPage({
                 <h4 className="mb-2 text-sm font-medium">Asignar agente</h4>
                 <AssignAgent ticketId={ticket.id} currentAgentId={ticket.agente?.id || null} />
               </div>
+              {session.user.role === "ADMIN" && (
+              <div className="border-t pt-4">
+                <DeleteTicket ticketId={ticket.id} ticketTitulo={ticket.titulo} />
+              </div>
+            )}
             </div>
           )}
         </CardContent>

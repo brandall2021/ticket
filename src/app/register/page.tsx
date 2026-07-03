@@ -8,12 +8,15 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+const DOMINIO = "@recuperocrediticio.com.ar"
+
 export default function RegisterPage() {
   const router = useRouter()
   const [nombre, setNombre] = useState("")
   const [apellido, setApellido] = useState("")
   const [interno, setInterno] = useState("")
   const [cargo, setCargo] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
@@ -24,6 +27,12 @@ export default function RegisterPage() {
     setLoading(true)
     setError("")
 
+    if (!email.toLowerCase().endsWith(DOMINIO)) {
+      setError(`El email debe ser del dominio ${DOMINIO}`)
+      setLoading(false)
+      return
+    }
+
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden")
       setLoading(false)
@@ -33,7 +42,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, apellido, interno, cargo, password }),
+      body: JSON.stringify({ nombre, apellido, interno, cargo, email, password }),
     })
 
     const data = await res.json()
@@ -105,9 +114,18 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="usuario@recuperocrediticio.com.ar"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
             <p className="text-xs text-neutral-400">
-              Tu email será: <span className="font-mono text-brand-600">{nombre.toLowerCase() || "nombre"}.{apellido.toLowerCase() || "apellido"}@recuperocrediticio.com.ar</span>
+              Debe ser del dominio <span className="font-medium text-brand-600">@recuperocrediticio.com.ar</span>
             </p>
           </div>
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit"
-import { sendEmail, ticketNotificationEmail } from "@/lib/email"
+import { sendEmail, ticketNotificationEmail, ticketCerradoEmail } from "@/lib/email"
 import { requireAuth } from "@/lib/api-auth"
 import { actualizarTicketSchema } from "@/lib/schemas"
 import { STATUS_TRANSITIONS } from "@/lib/constants"
@@ -127,16 +127,29 @@ export async function PATCH(
     const ticketUrl = `${
       process.env.NEXT_PUBLIC_URL || "http://localhost:3000"
     }/tickets/${id}`
+    const esCerrado = parsed.data.status === "CERRADO"
 
-    await sendEmail({
-      to: existing.cliente.email,
-      ...ticketNotificationEmail({
-        titulo: existing.titulo,
-        status: parsed.data.status,
-        url: ticketUrl,
-        nombre: existing.cliente.name,
-      }),
-    })
+    if (esCerrado) {
+      await sendEmail({
+        to: existing.cliente.email,
+        ...ticketCerradoEmail({
+          titulo: existing.titulo,
+          nombre: existing.cliente.name,
+          solucion: existing.descripcion,
+          url: ticketUrl,
+        }),
+      })
+    } else {
+      await sendEmail({
+        to: existing.cliente.email,
+        ...ticketNotificationEmail({
+          titulo: existing.titulo,
+          status: parsed.data.status,
+          url: ticketUrl,
+          nombre: existing.cliente.name,
+        }),
+      })
+    }
 
     if (ticket.agente?.email) {
       await sendEmail({

@@ -25,6 +25,28 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
   }
 }
 
+export function ticketCerradoEmail({ titulo, nombre, solucion, url }: { titulo: string; nombre: string; solucion: string; url: string }) {
+  return {
+    subject: `[Ticket Cerrado] ${titulo}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1a56db;">Ticket cerrado</h2>
+        <p>Hola <strong>${nombre}</strong>,</p>
+        <p>El ticket <strong>${titulo}</strong> ha sido cerrado.</p>
+        <div style="background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 8px; padding: 16px; margin: 16px 0;">
+          <p style="margin: 0 0 8px 0; font-weight: 600; color: #166534;">Solución:</p>
+          <p style="margin: 0; color: #374151; white-space: pre-wrap;">${solucion}</p>
+        </div>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 6px;">Ver ticket</a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="font-size: 12px; color: #9ca3af;">Sistema de Tickets</p>
+      </div>
+    `,
+  }
+}
+
 export function ticketNotificationEmail({ titulo, status, url, nombre }: { titulo: string; status: string; url: string; nombre: string }) {
   return {
     subject: `[Ticket] ${titulo} - ${status}`,

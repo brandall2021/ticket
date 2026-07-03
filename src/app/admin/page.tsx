@@ -21,7 +21,7 @@ export default async function AdminDashboard() {
   const [totalTickets, ticketsAbiertos, ticketsHoy, agentes, clientes] = await Promise.all([
     prisma.ticket.count(),
     prisma.ticket.count({
-      where: { status: { in: ["NUEVO", "ASIGNADO", "EN_PROGRESO", "REABIERTO"] } },
+      where: { status: { in: ["NUEVO", "EN_CURSO", "EN_ESPERA"] } },
     }),
     prisma.ticket.count({ where: { createdAt: { gte: today, lt: tomorrow } } }),
     prisma.user.count({ where: { role: "AGENT" } }),

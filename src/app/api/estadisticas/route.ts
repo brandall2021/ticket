@@ -19,7 +19,7 @@ export async function GET() {
       prisma.ticket.groupBy({ by: ["prioridad"], _count: true }),
       prisma.ticket.count({ where: { createdAt: { gte: today, lt: tomorrow } } }),
       prisma.ticket.count({
-        where: { status: { in: ["NUEVO", "ASIGNADO", "EN_PROGRESO", "REABIERTO"] } },
+        where: { status: { in: ["NUEVO", "EN_CURSO", "EN_ESPERA"] } },
       }),
       prisma.user.count({ where: { role: "AGENT" } }),
       prisma.user.count({ where: { role: "CLIENT" } }),

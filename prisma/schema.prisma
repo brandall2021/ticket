@@ -15,11 +15,9 @@ enum Role {
 
 enum TicketStatus {
   NUEVO
-  ASIGNADO
-  EN_PROGRESO
-  RESUELTO
+  EN_CURSO
+  EN_ESPERA
   CERRADO
-  REABIERTO
 }
 
 enum Prioridad {
@@ -63,6 +61,7 @@ model Ticket {
   prioridad   Prioridad    @default(MEDIA)
   ubicacion   String?
   ipPc        String?
+  solucion    String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 

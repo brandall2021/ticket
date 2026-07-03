@@ -16,14 +16,14 @@ export default async function Home() {
   const stats = isAgent
     ? await Promise.all([
         prisma.ticket.count(),
-        prisma.ticket.count({ where: { status: { in: ["NUEVO", "ASIGNADO", "EN_PROGRESO", "REABIERTO"] } } }),
+        prisma.ticket.count({ where: { status: { in: ["NUEVO", "EN_CURSO", "EN_ESPERA"] } } }),
         prisma.ticket.count({ where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } } }),
         prisma.user.count({ where: { role: "CLIENT" } }),
       ])
     : await Promise.all([
         prisma.ticket.count({ where: { clienteId: user.id } }),
-        prisma.ticket.count({ where: { clienteId: user.id, status: { in: ["NUEVO", "ASIGNADO", "EN_PROGRESO", "REABIERTO"] } } }),
-        prisma.ticket.count({ where: { clienteId: user.id, status: "RESUELTO" } }),
+        prisma.ticket.count({ where: { clienteId: user.id, status: { in: ["NUEVO", "EN_CURSO", "EN_ESPERA"] } } }),
+        prisma.ticket.count({ where: { clienteId: user.id, status: "CERRADO" } }),
         prisma.ticket.count({ where: { clienteId: user.id, status: "CERRADO" } }),
       ])
 

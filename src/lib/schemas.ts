@@ -13,12 +13,13 @@ export const crearTicketSchema = z.object({
 export const actualizarTicketSchema = z.object({
   titulo: z.string().optional(),
   descripcion: z.string().optional(),
-  status: z.enum(["NUEVO", "ASIGNADO", "EN_PROGRESO", "RESUELTO", "CERRADO", "REABIERTO"]).optional(),
+  status: z.enum(["NUEVO", "EN_CURSO", "EN_ESPERA", "CERRADO"]).optional(),
   prioridad: z.enum(["BAJA", "MEDIA", "ALTA", "CRITICA"]).optional(),
   agenteId: z.string().nullable().optional(),
   categoriaId: z.string().nullable().optional(),
   ubicacion: z.string().nullable().optional(),
   ipPc: z.string().nullable().optional(),
+  solucion: z.string().nullable().optional(),
 })
 
 export const crearCategoriaSchema = z.object({

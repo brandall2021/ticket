@@ -102,6 +102,10 @@ export async function PATCH(
     data.ubicacion = parsed.data.ubicacion
     changes.push(`ubicación: "${parsed.data.ubicacion}"`)
   }
+  if (parsed.data.solucion !== undefined) {
+    data.solucion = parsed.data.solucion
+    changes.push("solución registrada")
+  }
 
   if (changes.length === 0) {
     return NextResponse.json({ error: "Sin cambios" }, { status: 400 })
@@ -130,12 +134,14 @@ export async function PATCH(
     const esCerrado = parsed.data.status === "CERRADO"
 
     if (esCerrado) {
+      const solucion =
+        parsed.data.solucion || ticket.solucion || existing.descripcion
       await sendEmail({
         to: existing.cliente.email,
         ...ticketCerradoEmail({
           titulo: existing.titulo,
           nombre: existing.cliente.name,
-          solucion: existing.descripcion,
+          solucion,
           url: ticketUrl,
         }),
       })

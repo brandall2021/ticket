@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TicketActions } from "@/components/ticket-actions"
 import { CommentForm } from "@/components/comment-form"
 import { AssignAgent } from "@/components/assign-agent"
-import { STATUS_COLORS, PRIORIDAD_COLORS } from "@/lib/constants"
+import { STATUS_COLORS, PRIORIDAD_COLORS, STATUS_LABELS } from "@/lib/constants"
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("es-AR", {
@@ -74,7 +74,7 @@ export default async function TicketDetailPage({
             <CardTitle className="text-2xl">{ticket.titulo}</CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge variant={STATUS_COLORS[ticket.status] || "default"}>
-                {ticket.status}
+                {STATUS_LABELS[ticket.status] || ticket.status}
               </Badge>
               <Badge
                 variant={PRIORIDAD_COLORS[ticket.prioridad] || "default"}
@@ -133,6 +133,13 @@ export default async function TicketDetailPage({
               </div>
             )}
           </div>
+
+          {ticket.solucion && (
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+              <h4 className="mb-1 text-sm font-medium text-green-800 dark:text-green-300">Solución</h4>
+              <p className="text-sm text-green-700 dark:text-green-400">{ticket.solucion}</p>
+            </div>
+          )}
 
           {isAdminOrAgent && (
             <div className="space-y-4 border-t pt-4">

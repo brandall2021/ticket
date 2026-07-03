@@ -7,30 +7,24 @@ export const ROLES = {
 export const ROLES_ADMIN_AGENT: string[] = [ROLES.ADMIN, ROLES.AGENT]
 
 export const STATUS_TRANSITIONS: Record<string, string[]> = {
-  NUEVO: ["ASIGNADO"],
-  ASIGNADO: ["EN_PROGRESO"],
-  EN_PROGRESO: ["RESUELTO"],
-  RESUELTO: ["CERRADO"],
-  CERRADO: ["REABIERTO"],
-  REABIERTO: ["ASIGNADO"],
+  NUEVO: ["EN_CURSO", "EN_ESPERA"],
+  EN_CURSO: ["EN_ESPERA", "CERRADO"],
+  EN_ESPERA: ["EN_CURSO", "CERRADO"],
+  CERRADO: ["EN_CURSO"],
 }
 
 export const STATUS_LABELS: Record<string, string> = {
   NUEVO: "Nuevo",
-  ASIGNADO: "Asignado",
-  EN_PROGRESO: "En Progreso",
-  RESUELTO: "Resuelto",
+  EN_CURSO: "En Curso",
+  EN_ESPERA: "En Espera",
   CERRADO: "Cerrado",
-  REABIERTO: "Reabierto",
 }
 
 export const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "success" | "warning" | "outline"> = {
   NUEVO: "default",
-  ASIGNADO: "secondary",
-  EN_PROGRESO: "warning",
-  RESUELTO: "success",
+  EN_CURSO: "warning",
+  EN_ESPERA: "secondary",
   CERRADO: "outline",
-  REABIERTO: "destructive",
 }
 
 export const PRIORIDAD_COLORS: Record<string, "default" | "secondary" | "destructive" | "success" | "warning" | "outline"> = {

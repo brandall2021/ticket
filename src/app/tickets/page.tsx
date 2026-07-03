@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import { Prisma } from "@prisma/client"
-import { STATUS_COLORS, PRIORIDAD_COLORS } from "@/lib/constants"
+import { STATUS_COLORS, PRIORIDAD_COLORS, STATUS_LABELS } from "@/lib/constants"
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })
@@ -87,11 +87,9 @@ export default async function TicketsPage({
           <Select name="status" defaultValue={status || ""}>
             <option value="">Todos los estados</option>
             <option value="NUEVO">Nuevo</option>
-            <option value="ASIGNADO">Asignado</option>
-            <option value="EN_PROGRESO">En Progreso</option>
-            <option value="RESUELTO">Resuelto</option>
+            <option value="EN_CURSO">En Curso</option>
+            <option value="EN_ESPERA">En Espera</option>
             <option value="CERRADO">Cerrado</option>
-            <option value="REABIERTO">Reabierto</option>
           </Select>
           <Select name="prioridad" defaultValue={prioridad || ""}>
             <option value="">Todas las prioridades</option>
@@ -128,7 +126,7 @@ export default async function TicketsPage({
                         <Badge
                           variant={STATUS_COLORS[ticket.status] || "default"}
                         >
-                          {ticket.status}
+                          {STATUS_LABELS[ticket.status] || ticket.status}
                         </Badge>
                         <Badge
                           variant={

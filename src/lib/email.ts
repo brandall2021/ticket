@@ -65,6 +65,28 @@ export function nuevaCuentaEmail({ nombre, email, password, url }: { nombre: str
   }
 }
 
+export function passwordCambiadaEmail({ nombre, email, password, url }: { nombre: string; email: string; password: string; url: string }) {
+  return {
+    subject: "Tu contraseña ha sido cambiada - Helpdesk",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1a56db;">Contraseña actualizada</h2>
+        <p>Hola <strong>${nombre}</strong>,</p>
+        <p>Tu contraseña en el sistema de tickets ha sido actualizada por un administrador.</p>
+        <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 16px 0;">
+          <p style="margin: 4px 0;"><strong>Email:</strong> ${email}</p>
+          <p style="margin: 4px 0;"><strong>Nueva contraseña:</strong> ${password}</p>
+        </div>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #1a56db; color: white; text-decoration: none; border-radius: 6px;">Iniciar sesión</a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="font-size: 12px; color: #9ca3af;">Sistema de Tickets</p>
+      </div>
+    `,
+  }
+}
+
 export function resetPasswordEmail({ name, url }: { name: string; url: string }) {
   return {
     subject: "Recuperación de contraseña - Helpdesk",

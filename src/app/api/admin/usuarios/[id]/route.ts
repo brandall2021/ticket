@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES } from "@/lib/constants"
+import { sendEmail, passwordCambiadaEmail } from "@/lib/email"
 
 export async function PATCH(
   req: NextRequest,
@@ -19,7 +20,10 @@ export async function PATCH(
   if (body.email !== undefined) data.email = body.email
   if (body.role !== undefined) data.role = body.role
   if (body.activo !== undefined) data.activo = body.activo
+
+  let passwordPlain: string | undefined
   if (body.password) {
+    passwordPlain = body.password
     data.password = await bcrypt.hash(body.password, 12)
   }
 
@@ -28,6 +32,16 @@ export async function PATCH(
     data,
     select: { id: true, name: true, email: true, role: true, activo: true, createdAt: true },
   })
+
+  if (passwordPlain) {
+    const { subject, html } = passwordCambiadaEmail({
+      nombre: user.name,
+      email: user.email,
+      password: passwordPlain,
+      url: process.env.NEXTAUTH_URL || "http://localhost:3000",
+    })
+    await sendEmail({ to: user.email, subject, html })
+  }
 
   return NextResponse.json(user)
 }

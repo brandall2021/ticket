@@ -10,7 +10,7 @@ export async function GET() {
   if (authResult.error) return authResult.error
 
   const usuarios = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, activo: true, createdAt: true },
+    select: { id: true, name: true, email: true, role: true, activo: true, lastLogin: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   })
 

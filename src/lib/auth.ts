@@ -41,6 +41,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({ allowDangerousEmailAccountLinking: true }),
   ],
   callbacks: {
+    async signIn({ user }) {
+      if (user.id) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLogin: new Date() },
+        }).catch(() => {})
+      }
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role

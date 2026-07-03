@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Key, ToggleLeft, ToggleRight } from "lucide-react"
+import { Plus, Key, ToggleLeft, ToggleRight, Trash2, Shuffle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,11 +16,26 @@ interface Usuario {
   email: string
   role: string
   activo: boolean
+  lastLogin: string | null
   createdAt: string
 }
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })
+}
+
+function formatDateTime(d: string | null) {
+  if (!d) return "—"
+  return new Date(d).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })
+}
+
+function generatePassword(length = 12) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  let result = ""
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
 }
 
 export default function AdminUsuariosPage() {
@@ -39,6 +54,8 @@ export default function AdminUsuariosPage() {
   const [newPassword, setNewPassword] = useState("")
   const [changingPassword, setChangingPassword] = useState(false)
 
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
   useEffect(() => {
     fetchUsuarios()
   }, [])
@@ -48,6 +65,14 @@ export default function AdminUsuariosPage() {
     const data = await res.json()
     setUsuarios(data)
     setLoading(false)
+  }
+
+  function handleGeneratePassword() {
+    setPassword(generatePassword())
+  }
+
+  function handleGenerateNewPassword() {
+    setNewPassword(generatePassword())
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -108,6 +133,16 @@ export default function AdminUsuariosPage() {
     setChangingPassword(false)
   }
 
+  async function handleDelete(userId: string) {
+    const res = await fetch(`/api/admin/usuarios/${userId}`, {
+      method: "DELETE",
+    })
+    if (res.ok) {
+      setDeletingId(null)
+      fetchUsuarios()
+    }
+  }
+
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl p-6">
@@ -153,7 +188,12 @@ export default function AdminUsuariosPage() {
             </div>
             <div className="min-w-[140px] flex-1 space-y-1">
               <Label htmlFor="pass">Contraseña</Label>
-              <Input id="pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6" required minLength={6} />
+              <div className="flex gap-1">
+                <Input id="pass" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6" required minLength={6} className="flex-1" />
+                <Button type="button" variant="outline" size="sm" className="h-9 w-9 shrink-0" onClick={handleGeneratePassword} title="Generar contraseña aleatoria">
+                  <Shuffle className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="w-32 space-y-1">
               <Label htmlFor="role">Rol</Label>
@@ -189,6 +229,7 @@ export default function AdminUsuariosPage() {
                     <th className="pb-3 pr-4 font-medium">Rol</th>
                     <th className="pb-3 pr-4 font-medium">Estado</th>
                     <th className="pb-3 pr-4 font-medium">Creado</th>
+                    <th className="pb-3 pr-4 font-medium">Último Login</th>
                     <th className="pb-3 font-medium">Acciones</th>
                   </tr>
                 </thead>
@@ -213,7 +254,8 @@ export default function AdminUsuariosPage() {
                           {user.activo ? "Activo" : "Inactivo"}
                         </Badge>
                       </td>
-                      <td className="py-3 text-neutral-500">{formatDate(user.createdAt)}</td>
+                      <td className="py-3 pr-4 text-neutral-500">{formatDate(user.createdAt)}</td>
+                      <td className="py-3 pr-4 text-neutral-500 text-xs">{formatDateTime(user.lastLogin)}</td>
                       <td className="py-3">
                         <div className="flex items-center gap-2">
                           <button
@@ -227,13 +269,16 @@ export default function AdminUsuariosPage() {
                           {passwordUserId === user.id ? (
                             <div className="flex items-center gap-1">
                               <Input
-                                type="password"
+                                type="text"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="Nueva contraseña"
                                 className="h-7 w-32 text-xs"
                                 minLength={6}
                               />
+                              <Button size="sm" variant="outline" className="h-7 w-7 shrink-0 p-0" onClick={handleGenerateNewPassword} title="Generar aleatoria">
+                                <Shuffle className="h-3 w-3" />
+                              </Button>
                               <Button size="sm" className="h-7 text-xs" onClick={() => handleChangePassword(user.id)} disabled={changingPassword || !newPassword}>
                                 Guardar
                               </Button>
@@ -249,6 +294,26 @@ export default function AdminUsuariosPage() {
                             >
                               <Key className="h-4 w-4" />
                               Contraseña
+                            </button>
+                          )}
+
+                          {deletingId === user.id ? (
+                            <div className="flex items-center gap-1">
+                              <Button size="sm" className="h-7 text-xs bg-red-600 hover:bg-red-700" onClick={() => handleDelete(user.id)}>
+                                Confirmar
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setDeletingId(null)}>
+                                Cancelar
+                              </Button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingId(user.id)}
+                              className="flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Eliminar
                             </button>
                           )}
                         </div>

@@ -30,16 +30,17 @@ enum Prioridad {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  email     String   @unique
+  email     String     @unique
   password  String?
   image     String?
   phone     String?
-  role      Role     @default(CLIENT)
-  activo    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      Role       @default(CLIENT)
+  activo    Boolean    @default(true)
+  lastLogin DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   assignedTickets Ticket[] @relation("AssignedAgent")
   createdTickets  Ticket[] @relation("Creator")

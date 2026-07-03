@@ -32,6 +32,9 @@ enum Prioridad {
 model User {
   id        String     @id @default(cuid())
   name      String
+  apellido  String?
+  interno   String?
+  cargo     String?
   email     String     @unique
   password  String?
   image     String?

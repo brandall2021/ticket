@@ -3,13 +3,24 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit"
 
+const DOMINIO_PERMITIDO = "recuperocrediticio.com.ar"
+
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json()
+    const { nombre, apellido, interno, cargo, password } = await req.json()
 
-    if (!name || !email || !password) {
+    if (!nombre || !apellido || !interno || !cargo || !password) {
       return NextResponse.json(
         { error: "Todos los campos son requeridos" },
+        { status: 400 }
+      )
+    }
+
+    const email = `${nombre.toLowerCase().trim()}.${apellido.toLowerCase().trim()}@${DOMINIO_PERMITIDO}`
+
+    if (!email.endsWith(`@${DOMINIO_PERMITIDO}`)) {
+      return NextResponse.json(
+        { error: `Solo se permiten correos del dominio @${DOMINIO_PERMITIDO}` },
         { status: 400 }
       )
     }
@@ -22,7 +33,6 @@ export async function POST(req: Request) {
     }
 
     const existing = await prisma.user.findUnique({ where: { email } })
-
     if (existing) {
       return NextResponse.json(
         { error: "El email ya está registrado" },
@@ -34,7 +44,10 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.create({
       data: {
-        name,
+        name: `${nombre.trim()} ${apellido.trim()}`,
+        apellido: apellido.trim(),
+        interno: interno.trim(),
+        cargo: cargo.trim(),
         email,
         password: hashedPassword,
         role: "CLIENT",

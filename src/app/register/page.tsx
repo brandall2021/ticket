@@ -10,9 +10,12 @@ import { Label } from "@/components/ui/label"
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [nombre, setNombre] = useState("")
+  const [apellido, setApellido] = useState("")
+  const [interno, setInterno] = useState("")
+  const [cargo, setCargo] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -21,10 +24,16 @@ export default function RegisterPage() {
     setLoading(true)
     setError("")
 
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      setLoading(false)
+      return
+    }
+
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ nombre, apellido, interno, cargo, password }),
     })
 
     const data = await res.json()
@@ -41,36 +50,65 @@ export default function RegisterPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 before:absolute before:inset-0 before:bg-[url('/bg-code.jpg')] before:bg-cover before:bg-center before:opacity-20">
       <div className="absolute inset-0 bg-gradient-to-b from-navy-900/60 via-navy-900/40 to-navy-900/60" />
-      <div className="relative z-10 w-full max-w-sm">
-      <Card className="w-full max-w-sm p-6 space-y-6">
+      <div className="relative z-10 w-full max-w-md">
+      <Card className="w-full p-6 space-y-6">
         <div className="flex flex-col items-center gap-2">
           <Building2 className="h-10 w-10 text-brand-600" />
           <h1 className="text-2xl font-bold">Crear cuenta</h1>
+          <p className="text-sm text-neutral-500">Solo personal de Recupero Crediticio</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Tu nombre"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="nombre">Nombre</Label>
+              <Input
+                id="nombre"
+                placeholder="Nombre"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="apellido">Apellido</Label>
+              <Input
+                id="apellido"
+                placeholder="Apellido"
+                value={apellido}
+                onChange={(e) => setApellido(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="correo@ejemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="interno">Interno</Label>
+              <Input
+                id="interno"
+                placeholder="Interno"
+                value={interno}
+                onChange={(e) => setInterno(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cargo">Cargo</Label>
+              <Input
+                id="cargo"
+                placeholder="Cargo"
+                value={cargo}
+                onChange={(e) => setCargo(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs text-neutral-400">
+              Tu email será: <span className="font-mono text-brand-600">{nombre.toLowerCase() || "nombre"}.{apellido.toLowerCase() || "apellido"}@recuperocrediticio.com.ar</span>
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -81,6 +119,19 @@ export default function RegisterPage() {
               placeholder="Mínimo 6 caracteres"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Repetir contraseña"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={6}
             />

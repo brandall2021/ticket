@@ -137,6 +137,23 @@ model AuditLog {
   @@index([fecha])
 }
 
+model Interno {
+  id          String   @id @default(cuid())
+  asesor      String
+  turno       String
+  campania    String
+  supervision String
+  interno     String
+  rol         String
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([asesor])
+  @@index([interno])
+  @@index([campania])
+}
+
 model StockCategoria {
   id        String      @id @default(cuid())
   nombre    String      @unique

@@ -1,81 +1,98 @@
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
-import { AnimatedSection } from "@/components/animated-section"
-import Image from "next/image"
-import { ExternalLink } from "lucide-react"
+import { Search } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Prisma } from "@prisma/client"
 
-interface InternoItem {
-  title: string
-  description: string
-  url: string
-  imageUrl: string
-}
-
-const items: InternoItem[] = [
-  {
-    title: "Internos Asesores",
-    description: "LISTA DE INTERNOS DE ASESORES EN GENERAL",
-    url: "https://docs.google.com/spreadsheets/d/1z7gKXODzpzIUw7PUbNDBu2BJlAbrRmHn/edit?usp=sharing&ouid=114083574672008375115&rtpof=true&sd=true",
-    imageUrl: "https://interno.recuperocrediticio.com/wp-content/uploads/2022/03/Internos.jpg",
-  },
-  {
-    title: "Internos de la Empresa",
-    description: "LISTA DE INTERNOS DE OTRAS AREAS",
-    url: "https://docs.google.com/spreadsheets/d/1r7h8CFMvOIoBh3aypdkMy5dxeAzVLLYW/edit?usp=sharing&ouid=114083574672008375115&rtpof=true&sd=true",
-    imageUrl: "https://interno.recuperocrediticio.com/wp-content/uploads/elementor/thumbs/Internos-importantes-plyqutk0nkgejbchkwe9kpwhrcqci59ao7qt6nfjgu.jpg",
-  },
-]
-
-export default async function InternosPage() {
+export default async function InternosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
   const session = await auth()
   if (!session?.user) redirect("/login")
 
+  const { q } = await searchParams
+
+  const where: Prisma.InternoWhereInput = {}
+  if (q) {
+    where.OR = [
+      { asesor: { contains: q, mode: "insensitive" } },
+      { turno: { contains: q, mode: "insensitive" } },
+      { campania: { contains: q, mode: "insensitive" } },
+      { supervision: { contains: q, mode: "insensitive" } },
+      { interno: { contains: q, mode: "insensitive" } },
+      { rol: { contains: q, mode: "insensitive" } },
+    ]
+  }
+
+  const internos = await prisma.interno.findMany({
+    where,
+    orderBy: [{ turno: "asc" }, { asesor: "asc" }],
+  })
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-        Listado de Internos
-      </h1>
-      <p className="mb-8 text-neutral-500 dark:text-neutral-400">
-        Lista de internos de la empresa por área
-      </p>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {items.map((item, i) => (
-          <AnimatedSection key={item.title} delay={i * 60}>
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block"
-            >
-              <Card className="card-hover overflow-hidden transition-all duration-200">
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 dark:bg-navy-700">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.title}
-                    fill
-                    className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-                    unoptimized
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                    {item.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                    {item.description}
-                  </p>
-                  <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 transition-colors group-hover:text-brand-700 dark:text-brand-400 dark:group-hover:text-brand-300">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    LINK
-                  </div>
-                </CardContent>
-              </Card>
-            </a>
-          </AnimatedSection>
-        ))}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          Listado de Internos
+        </h1>
+        <p className="mt-1 text-neutral-500 dark:text-neutral-400">
+          {internos.length} registros
+        </p>
       </div>
+
+      <div className="mb-6">
+        <form className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <Input
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar por asesor, campaña, interno..."
+            className="pl-9"
+          />
+        </form>
+      </div>
+
+      {internos.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-neutral-500">
+            No se encontraron registros
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-navy-700">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-neutral-200 bg-neutral-50 dark:border-navy-700 dark:bg-navy-800">
+                <th className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-300">Asesor</th>
+                <th className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-300">Turno</th>
+                <th className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-300">Campaña</th>
+                <th className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-300">Supervisión</th>
+                <th className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-300">Int.</th>
+                <th className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-300">Rol</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-200 dark:divide-navy-700">
+              {internos.map((item) => (
+                <tr
+                  key={item.id}
+                  className="bg-white transition-colors hover:bg-neutral-50 dark:bg-navy-800 dark:hover:bg-navy-700/50"
+                >
+                  <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">{item.asesor}</td>
+                  <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">{item.turno}</td>
+                  <td className="max-w-xs truncate px-4 py-3 text-neutral-600 dark:text-neutral-400" title={item.campania}>{item.campania}</td>
+                  <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">{item.supervision}</td>
+                  <td className="px-4 py-3 font-mono text-neutral-900 dark:text-neutral-100">{item.interno}</td>
+                  <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">{item.rol}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

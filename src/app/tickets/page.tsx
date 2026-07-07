@@ -105,7 +105,7 @@ export default async function TicketsPage({
       </div>
 
       <div className="mb-4 rounded-lg border border-neutral-200 bg-white p-4 dark:border-navy-700 dark:bg-navy-800">
-        <form className="flex flex-wrap items-end gap-3">
+        <form className="space-y-3">
           <div className="relative min-w-[200px] flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <Input
@@ -115,33 +115,35 @@ export default async function TicketsPage({
               className="pl-9"
             />
           </div>
-          <Select name="status" defaultValue={status || ""}>
-            <option value="">Todos los estados</option>
-            <option value="NUEVO">Nuevo</option>
-            <option value="EN_CURSO">En Curso</option>
-            <option value="EN_ESPERA">En Espera</option>
-            <option value="CERRADO">Cerrado</option>
-          </Select>
-          <Select name="prioridad" defaultValue={prioridad || ""}>
-            <option value="">Todas las prioridades</option>
-            <option value="BAJA">Baja</option>
-            <option value="MEDIA">Media</option>
-            <option value="ALTA">Alta</option>
-            <option value="CRITICA">Crítica</option>
-          </Select>
-          <Input type="date" name="desde" defaultValue={desde} className="w-36" />
-          <Input type="date" name="hasta" defaultValue={hasta} className="w-36" />
-          <Button type="submit" variant="secondary" size="sm">
-            <Search className="h-4 w-4" />
-            Filtrar
-          </Button>
-          {(status || prioridad || q || desde || hasta) && (
-            <Link href="/tickets">
-              <Button type="button" variant="ghost" size="sm">
-                Limpiar
-              </Button>
-            </Link>
-          )}
+          <div className="flex flex-wrap items-end gap-3">
+            <Select name="status" defaultValue={status || ""}>
+              <option value="">Todos los estados</option>
+              <option value="NUEVO">Nuevo</option>
+              <option value="EN_CURSO">En Curso</option>
+              <option value="EN_ESPERA">En Espera</option>
+              <option value="CERRADO">Cerrado</option>
+            </Select>
+            <Select name="prioridad" defaultValue={prioridad || ""}>
+              <option value="">Todas las prioridades</option>
+              <option value="BAJA">Baja</option>
+              <option value="MEDIA">Media</option>
+              <option value="ALTA">Alta</option>
+              <option value="CRITICA">Crítica</option>
+            </Select>
+            <Input type="date" name="desde" defaultValue={desde} className="w-36" />
+            <Input type="date" name="hasta" defaultValue={hasta} className="w-36" />
+            <Button type="submit" variant="secondary" size="sm">
+              <Search className="h-4 w-4" />
+              Filtrar
+            </Button>
+            {(status || prioridad || q || desde || hasta) && (
+              <Link href="/tickets">
+                <Button type="button" variant="ghost" size="sm">
+                  Limpiar
+                </Button>
+              </Link>
+            )}
+          </div>
         </form>
       </div>
 

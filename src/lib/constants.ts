@@ -1,10 +1,13 @@
 export const ROLES = {
   ADMIN: "ADMIN" as const,
   AGENT: "AGENT" as const,
+  EDITOR: "EDITOR" as const,
   CLIENT: "CLIENT" as const,
 }
 
 export const ROLES_ADMIN_AGENT: string[] = [ROLES.ADMIN, ROLES.AGENT]
+export const ROLES_ADMIN_AGENT_EDITOR: string[] = [ROLES.ADMIN, ROLES.AGENT, ROLES.EDITOR]
+export const ROLES_ADMIN_EDITOR: string[] = [ROLES.ADMIN, ROLES.EDITOR]
 
 export const STATUS_TRANSITIONS: Record<string, string[]> = {
   NUEVO: ["EN_CURSO", "EN_ESPERA"],

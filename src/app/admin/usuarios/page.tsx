@@ -214,6 +214,7 @@ export default function AdminUsuariosPage() {
               <Label htmlFor="role">Rol</Label>
               <Select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
                 <option value="CLIENT">Cliente</option>
+                <option value="EDITOR">Editor</option>
                 <option value="AGENT">Agente</option>
                 <option value="ADMIN">Admin</option>
               </Select>
@@ -265,6 +266,7 @@ export default function AdminUsuariosPage() {
                           className="rounded-md border border-neutral-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                         >
                           <option value="CLIENT">Cliente</option>
+                          <option value="EDITOR">Editor</option>
                           <option value="AGENT">Agente</option>
                           <option value="ADMIN">Admin</option>
                         </select>

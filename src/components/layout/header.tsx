@@ -4,11 +4,12 @@ import { auth, signOut } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
-const roleBadgeVariant = {
-  ADMIN: "destructive" as const,
-  AGENT: "warning" as const,
-  CLIENT: "secondary" as const,
-} as const;
+const roleBadgeVariant: Record<string, "destructive" | "warning" | "secondary" | "default"> = {
+  ADMIN: "destructive",
+  AGENT: "warning",
+  EDITOR: "secondary",
+  CLIENT: "secondary",
+};
 
 export async function Header() {
   const session = await auth();
@@ -34,7 +35,7 @@ export async function Header() {
             >
               Tickets
             </Link>
-            {session?.user?.role && ["ADMIN", "AGENT"].includes(session.user.role) && (
+            {session?.user?.role && ["ADMIN", "AGENT", "EDITOR"].includes(session.user.role) && (
               <Link
                 href="/admin"
                 className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-neutral-300 dark:hover:bg-navy-700 dark:hover:text-brand-400"
@@ -76,7 +77,7 @@ export async function Header() {
                 {session.user.name ?? session.user.email}
               </Link>
               {session.user.role && (
-                <Badge variant={roleBadgeVariant[session.user.role as keyof typeof roleBadgeVariant] ?? "secondary"}>
+                <Badge variant={roleBadgeVariant[session.user.role] ?? "secondary"}>
                   {session.user.role}
                 </Badge>
               )}

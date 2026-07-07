@@ -2,16 +2,18 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Ticket, Users, FolderOpen, BarChart3 } from "lucide-react"
+import { Ticket, Users, FolderOpen, BarChart3, Link2, UserCog } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ROLES_ADMIN_AGENT } from "@/lib/constants"
+import { ROLES_ADMIN_AGENT_EDITOR, ROLES_ADMIN_AGENT } from "@/lib/constants"
 
 export default async function AdminDashboard() {
   const session = await auth()
-  if (!session?.user || !ROLES_ADMIN_AGENT.includes(session.user.role)) {
+  if (!session?.user || !ROLES_ADMIN_AGENT_EDITOR.includes(session.user.role)) {
     redirect("/login")
   }
+
+  const isAdminOrAgent = ROLES_ADMIN_AGENT.includes(session.user.role)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -32,19 +34,35 @@ export default async function AdminDashboard() {
     <div className="mx-auto max-w-5xl space-y-8 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Dashboard</h1>
-        <div className="flex gap-3">
-          <Link href="/admin/usuarios">
+        <div className="flex flex-wrap gap-3">
+          <Link href="/admin/internos">
             <Button variant="outline" size="sm">
-              <Users className="h-4 w-4" />
-              Usuarios
+              <UserCog className="h-4 w-4" />
+              Internos
             </Button>
           </Link>
-          <Link href="/admin/categorias">
+          <Link href="/admin/links">
             <Button variant="outline" size="sm">
-              <FolderOpen className="h-4 w-4" />
-              Categorías
+              <Link2 className="h-4 w-4" />
+              Links
             </Button>
           </Link>
+          {isAdminOrAgent && (
+            <>
+              <Link href="/admin/usuarios">
+                <Button variant="outline" size="sm">
+                  <Users className="h-4 w-4" />
+                  Usuarios
+                </Button>
+              </Link>
+              <Link href="/admin/categorias">
+                <Button variant="outline" size="sm">
+                  <FolderOpen className="h-4 w-4" />
+                  Categorías
+                </Button>
+              </Link>
+            </>
+          )}
           <Link href="/tickets">
             <Button variant="outline" size="sm">
               <Ticket className="h-4 w-4" />

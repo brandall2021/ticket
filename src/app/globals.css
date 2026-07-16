@@ -7,6 +7,7 @@
   --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out-expo: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;
   --color-brand-200: #bfdbfe;
@@ -34,6 +35,20 @@
   --color-gold-400: #fbbf24;
   --color-gold-500: #f59e0b;
   --color-gold-600: #d97706;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+
+  --color-red-50: #fef2f2;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", monospace;
 }
 
 :root {
@@ -45,22 +60,37 @@
   --text-muted: #64748b;
   --border-color: #e2e8f0;
   --border-light: #f1f5f9;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e2e8f0;
+  --sidebar-hover: #f1f5f9;
+  --sidebar-active: #eff6ff;
+  --sidebar-text: #475569;
+  --sidebar-text-active: #1d4ed8;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
 }
 
 .dark {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #0f172a;
+  --bg-primary: #0b1120;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1e293b;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --border-color: #334155;
+  --border-color: #1e293b;
   --border-light: #1e293b;
+  --sidebar-bg: #0f172a;
+  --sidebar-border: #1e293b;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: rgba(59, 130, 246, 0.12);
+  --sidebar-text: #94a3b8;
+  --sidebar-text-active: #60a5fa;
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  font-family: var(--font-body);
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -69,15 +99,102 @@ body {
   color: white;
 }
 
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  transition: width 200ms var(--ease-out-expo);
+  overflow: hidden;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: var(--sidebar-text);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 150ms ease;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-item:hover {
+  background: var(--sidebar-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-item.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-text-active);
+  font-weight: 600;
+}
+
+.sidebar-item .icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Glassmorphism card */
+.card-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+}
+
+.dark .card-glass {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Stat card */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 24px;
+  transition: transform 200ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Animations */
 @keyframes reveal-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fade-in {
@@ -86,50 +203,25 @@ body {
 }
 
 @keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-.animate-reveal {
-  opacity: 0;
-}
-
-.animate-reveal.revealed {
-  animation: reveal-up 400ms var(--ease-out-expo) forwards;
-}
-
-.animate-fade-in {
-  opacity: 0;
-}
-
-.animate-fade-in.revealed {
-  animation: fade-in 300ms var(--ease-out-expo) forwards;
-}
-
-.animate-scale-in {
-  opacity: 0;
-}
-
-.animate-scale-in.revealed {
-  animation: scale-in 250ms var(--ease-out-expo) forwards;
-}
+.animate-reveal { opacity: 0; }
+.animate-reveal.revealed { animation: reveal-up 400ms var(--ease-out-expo) forwards; }
+.animate-fade-in { opacity: 0; }
+.animate-fade-in.revealed { animation: fade-in 300ms var(--ease-out-expo) forwards; }
+.animate-scale-in { opacity: 0; }
+.animate-scale-in.revealed { animation: scale-in 250ms var(--ease-out-expo) forwards; }
 
 @media (hover: hover) and (pointer: fine) {
   .card-hover {
     transition: transform 200ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
   }
-
   .card-hover:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
   }
-
   .dark .card-hover:hover {
     box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px -5px rgba(0, 0, 0, 0.2);
   }
@@ -138,18 +230,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-reveal.revealed,
   .animate-fade-in.revealed,
-  .animate-scale-in.revealed {
-    animation: none;
-    opacity: 1;
-  }
-
-  .card-hover {
-    transition: none;
-  }
-
-  .card-hover:hover {
-    transform: none;
-  }
+  .animate-scale-in.revealed { animation: none; opacity: 1; }
+  .card-hover { transition: none; }
+  .card-hover:hover { transform: none; }
+  .stat-card:hover { transform: none; }
 }
 
 /* Calculator */

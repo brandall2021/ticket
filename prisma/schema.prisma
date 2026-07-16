@@ -50,6 +50,7 @@ model User {
   attachments     Attachment[]
   auditLogs       AuditLog[]
   notes           Note[]
+  passwords       Password[]
 
   @@index([email])
   @@index([role])
@@ -223,4 +224,22 @@ model Note {
   @@index([autorId])
   @@index([titulo])
   @@index([createdAt])
+}
+
+model Password {
+  id          String   @id @default(cuid())
+  ip          String
+  contrasena  String
+  funcion     String
+  descripcion String
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  autorId String
+  autor   User   @relation(fields: [autorId], references: [id])
+
+  @@index([autorId])
+  @@index([funcion])
+  @@index([ip])
 }

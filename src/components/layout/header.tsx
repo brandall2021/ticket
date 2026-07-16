@@ -61,6 +61,14 @@ export async function Header() {
             )}
             {session?.user && (
               <Link
+                href="/instructivos"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-neutral-300 dark:hover:bg-navy-700 dark:hover:text-brand-400"
+              >
+                Instructivos
+              </Link>
+            )}
+            {session?.user && (
+              <Link
                 href="/internos"
                 className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-neutral-300 dark:hover:bg-navy-700 dark:hover:text-brand-400"
               >

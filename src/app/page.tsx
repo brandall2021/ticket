@@ -1,210 +1,55 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { redirect } from "next/navigation"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Ticket, Plus, Users, FolderOpen, BarChart3 } from "lucide-react"
-import { AnimatedSection } from "@/components/animated-section"
+import { DashboardClient } from "./dashboard-client"
 
-export default async function Home() {
+export default async function HomePage() {
   const session = await auth()
-  if (!session?.user) redirect("/login")
 
-  const user = session.user
-  const isAgent = user.role === "ADMIN" || user.role === "AGENT"
-
-  const stats = isAgent
-    ? await Promise.all([
-        prisma.ticket.count(),
-        prisma.ticket.count({ where: { status: { in: ["NUEVO", "EN_CURSO", "EN_ESPERA"] } } }),
-        prisma.ticket.count({ where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } } }),
-        prisma.user.count({ where: { role: "CLIENT" } }),
-      ])
-    : await Promise.all([
-        prisma.ticket.count({ where: { clienteId: user.id } }),
-        prisma.ticket.count({ where: { clienteId: user.id, status: { in: ["NUEVO", "EN_CURSO", "EN_ESPERA"] } } }),
-        prisma.ticket.count({ where: { clienteId: user.id, status: "CERRADO" } }),
-        prisma.ticket.count({ where: { clienteId: user.id, status: "CERRADO" } }),
-      ])
-
-  const [total, abiertos, hoy, otros] = stats
-
-  if (isAgent) {
+  if (!session?.user) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6 text-neutral-900 dark:text-neutral-100">Panel de Control</h1>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <AnimatedSection delay={0}>
-            <Card className="card-hover">
-              <CardContent className="pt-6 flex items-center gap-3">
-                <Ticket size={24} className="text-brand-600" />
-                <div>
-                  <p className="text-2xl font-bold">{total}</p>
-                  <p className="text-sm text-gray-500">Total tickets</p>
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedSection>
-          <AnimatedSection delay={60}>
-            <Card className="card-hover">
-              <CardContent className="pt-6 flex items-center gap-3">
-                <Ticket size={24} className="text-orange-600" />
-                <div>
-                  <p className="text-2xl font-bold">{abiertos}</p>
-                  <p className="text-sm text-gray-500">Abiertos</p>
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedSection>
-          <AnimatedSection delay={120}>
-            <Card className="card-hover">
-              <CardContent className="pt-6 flex items-center gap-3">
-                <BarChart3 size={24} className="text-green-600" />
-                <div>
-                  <p className="text-2xl font-bold">{hoy}</p>
-                  <p className="text-sm text-gray-500">Creados hoy</p>
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedSection>
-          <AnimatedSection delay={180}>
-            <Card className="card-hover">
-              <CardContent className="pt-6 flex items-center gap-3">
-                <Users size={24} className="text-purple-600" />
-                <div>
-                  <p className="text-2xl font-bold">{otros}</p>
-                  <p className="text-sm text-gray-500">Clientes</p>
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedSection>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <AnimatedSection delay={80} animation="fade-in">
-            <Link href="/tickets">
-              <Card className="card-hover cursor-pointer">
-                <CardContent className="pt-6 flex items-center gap-3">
-                <Ticket size={24} className="text-brand-600" />
-                  <div>
-                    <h3 className="font-semibold">Ver Tickets</h3>
-                    <p className="text-sm text-gray-500">Gestionar tickets</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </AnimatedSection>
-          <AnimatedSection delay={140} animation="fade-in">
-            <Link href="/admin">
-              <Card className="card-hover cursor-pointer">
-                <CardContent className="pt-6 flex items-center gap-3">
-                  <FolderOpen size={24} className="text-green-600" />
-                  <div>
-                    <h3 className="font-semibold">Administrar</h3>
-                    <p className="text-sm text-gray-500">Usuarios y categorías</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </AnimatedSection>
-          <AnimatedSection delay={200} animation="fade-in">
-            <Link href="/tickets/nuevo">
-              <Card className="card-hover cursor-pointer">
-                <CardContent className="pt-6 flex items-center gap-3">
-                  <Plus size={24} className="text-purple-600" />
-                  <div>
-                    <h3 className="font-semibold">Nuevo Ticket</h3>
-                    <p className="text-sm text-gray-500">Crear ticket de soporte</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </AnimatedSection>
+      <div className="flex min-h-[80vh] items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight">Helpdesk</h1>
+          <p className="mt-2 text-[var(--text-muted)]">Sistema de tickets de soporte</p>
+          <a
+            href="/login"
+            className="mt-6 inline-flex h-11 items-center rounded-xl bg-brand-600 px-6 text-sm font-medium text-white transition-all hover:bg-brand-700 active:scale-[0.98]"
+          >
+            Ingresar
+          </a>
         </div>
       </div>
     )
   }
 
+  const [ticketCount, instructivoCount, notaCount, linkCount] = await Promise.all([
+    prisma.ticket.count({ where: { clienteId: session.user.id! } }),
+    prisma.instructivo.count({ where: { activo: true } }),
+    prisma.note.count({ where: { autorId: session.user.id! } }),
+    prisma.link.count({ where: { activo: true } }),
+  ])
+
+  const recentTickets = await prisma.ticket.findMany({
+    where: { clienteId: session.user.id! },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    select: { id: true, titulo: true, createdAt: true, status: true },
+  })
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-neutral-900 dark:text-neutral-100">Mis Tickets</h1>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <AnimatedSection delay={0}>
-          <Card className="card-hover">
-            <CardContent className="pt-6 flex items-center gap-3">
-              <Ticket size={24} className="text-brand-600" />
-              <div>
-                <p className="text-2xl font-bold">{total}</p>
-                <p className="text-sm text-gray-500">Totales</p>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimatedSection>
-        <AnimatedSection delay={60}>
-          <Card className="card-hover">
-            <CardContent className="pt-6 flex items-center gap-3">
-              <Ticket size={24} className="text-orange-600" />
-              <div>
-                <p className="text-2xl font-bold">{abiertos}</p>
-                <p className="text-sm text-gray-500">Abiertos</p>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimatedSection>
-        <AnimatedSection delay={120}>
-          <Card className="card-hover">
-            <CardContent className="pt-6 flex items-center gap-3">
-              <Ticket size={24} className="text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">{otros}</p>
-                <p className="text-sm text-gray-500">Resueltos</p>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimatedSection>
-        <AnimatedSection delay={180}>
-          <Card className="card-hover">
-            <CardContent className="pt-6 flex items-center gap-3">
-              <Ticket size={24} className="text-gray-600" />
-              <div>
-                <p className="text-2xl font-bold">{hoy}</p>
-                <p className="text-sm text-gray-500">Cerrados</p>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimatedSection>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <AnimatedSection delay={80} animation="fade-in">
-          <Link href="/tickets">
-            <Card className="card-hover cursor-pointer">
-              <CardContent className="pt-6 flex items-center gap-3">
-                <Ticket size={24} className="text-brand-600" />
-                <div>
-                  <h3 className="font-semibold">Mis Tickets</h3>
-                  <p className="text-sm text-gray-500">Ver y dar seguimiento</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </AnimatedSection>
-        <AnimatedSection delay={140} animation="fade-in">
-          <Link href="/tickets/nuevo">
-            <Card className="card-hover cursor-pointer">
-              <CardContent className="pt-6 flex items-center gap-3">
-                <Plus size={24} className="text-purple-600" />
-                <div>
-                  <h3 className="font-semibold">Nuevo Ticket</h3>
-                  <p className="text-sm text-gray-500">Abrir un ticket de soporte</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </AnimatedSection>
-      </div>
-    </div>
+    <DashboardClient
+      ticketCount={ticketCount}
+      instructivoCount={instructivoCount}
+      notaCount={notaCount}
+      linkCount={linkCount}
+      recentTickets={recentTickets.map(t => ({
+        id: t.id,
+        title: t.titulo,
+        date: new Date(t.createdAt).toLocaleDateString("es-AR"),
+        type: "ticket" as const,
+        href: "/tickets/",
+      }))}
+      userName={session.user.name ?? "Usuario"}
+    />
   )
 }

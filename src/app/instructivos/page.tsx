@@ -33,9 +33,7 @@ export default async function InstructivosPage() {
           {items.map((item, i) => (
             <AnimatedSection key={item.id} delay={i * 60}>
               <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={`/instructivos/${item.id}`}
                 className="group block"
               >
                 <Card className="card-hover overflow-hidden transition-all duration-200">

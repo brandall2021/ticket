@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Trash2, X, Check, ArrowLeft, Save, ExternalLink } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, ArrowLeft, Save, ExternalLink, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 interface Instructivo {
   id: string
@@ -14,6 +15,7 @@ interface Instructivo {
   description: string
   url: string
   imageUrl: string
+  contenido: string | null
   activo: boolean
 }
 
@@ -26,7 +28,7 @@ export default function AdminInstructivosPage() {
   const [editForm, setEditForm] = useState<Instructivo | null>(null)
 
   const [showCreate, setShowCreate] = useState(false)
-  const [createForm, setCreateForm] = useState({ title: "", description: "Instructivo de Gestión", url: "", imageUrl: "" })
+  const [createForm, setCreateForm] = useState({ title: "", description: "Instructivo de Gestión", url: "", imageUrl: "", contenido: "" })
   const [creating, setCreating] = useState(false)
 
   useEffect(() => { fetchItems() }, [])
@@ -78,7 +80,7 @@ export default function AdminInstructivosPage() {
     })
     setCreating(false)
     setShowCreate(false)
-    setCreateForm({ title: "", description: "Instructivo de Gestión", url: "", imageUrl: "" })
+    setCreateForm({ title: "", description: "Instructivo de Gestión", url: "", imageUrl: "", contenido: "" })
     fetchItems()
   }
 
@@ -112,24 +114,35 @@ export default function AdminInstructivosPage() {
             <CardTitle>Nuevo instructivo</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreate} className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label>Título</Label>
-                <Input value={createForm.title} onChange={e => setCreateForm({ ...createForm, title: e.target.value })} required />
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>Título</Label>
+                  <Input value={createForm.title} onChange={e => setCreateForm({ ...createForm, title: e.target.value })} required />
+                </div>
+                <div className="space-y-1">
+                  <Label>URL del instructivo</Label>
+                  <Input value={createForm.url} onChange={e => setCreateForm({ ...createForm, url: e.target.value })} required />
+                </div>
+                <div className="space-y-1">
+                  <Label>Descripción</Label>
+                  <Input value={createForm.description} onChange={e => setCreateForm({ ...createForm, description: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label>URL de imagen</Label>
+                  <Input value={createForm.imageUrl} onChange={e => setCreateForm({ ...createForm, imageUrl: e.target.value })} />
+                </div>
               </div>
               <div className="space-y-1">
-                <Label>URL del instructivo</Label>
-                <Input value={createForm.url} onChange={e => setCreateForm({ ...createForm, url: e.target.value })} required />
+                <Label>Contenido del instructivo</Label>
+                <RichTextEditor
+                  value={createForm.contenido}
+                  onChange={html => setCreateForm({ ...createForm, contenido: html })}
+                  placeholder="Escribe el instructivo aquí..."
+                  minHeight={300}
+                />
               </div>
-              <div className="space-y-1">
-                <Label>Descripción</Label>
-                <Input value={createForm.description} onChange={e => setCreateForm({ ...createForm, description: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label>URL de imagen</Label>
-                <Input value={createForm.imageUrl} onChange={e => setCreateForm({ ...createForm, imageUrl: e.target.value })} />
-              </div>
-              <div className="flex gap-2 sm:col-span-2">
+              <div className="flex gap-2">
                 <Button type="submit" disabled={creating} className="gap-2">
                   <Save className="h-4 w-4" />
                   {creating ? "Guardando..." : "Guardar"}
@@ -152,7 +165,7 @@ export default function AdminInstructivosPage() {
                   <tr className="border-b text-left text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:border-navy-700">
                     <th className="px-4 py-3">Título</th>
                     <th className="px-4 py-3">Descripción</th>
-                    <th className="px-4 py-3">URL</th>
+                    <th className="px-4 py-3">Contenido</th>
                     <th className="px-4 py-3">Acciones</th>
                   </tr>
                 </thead>
@@ -163,7 +176,14 @@ export default function AdminInstructivosPage() {
                         <>
                           <td className="px-4 py-2"><Input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} className="h-8 text-sm" /></td>
                           <td className="px-4 py-2"><Input value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} className="h-8 text-sm" /></td>
-                          <td className="px-4 py-2"><Input value={editForm.url} onChange={e => setEditForm({ ...editForm, url: e.target.value })} className="h-8 text-sm" /></td>
+                          <td className="px-4 py-2 min-w-[300px]">
+                            <RichTextEditor
+                              value={editForm.contenido || ""}
+                              onChange={html => setEditForm({ ...editForm, contenido: html })}
+                              placeholder="Contenido del instructivo..."
+                              minHeight={200}
+                            />
+                          </td>
                           <td className="px-4 py-2">
                             <div className="flex gap-1">
                               <Button size="sm" variant="ghost" onClick={saveEdit} className="h-8 w-8 p-0 text-green-600"><Check className="h-4 w-4" /></Button>
@@ -175,14 +195,21 @@ export default function AdminInstructivosPage() {
                         <>
                           <td className="px-4 py-3 font-medium">{item.title}</td>
                           <td className="max-w-xs truncate px-4 py-3 text-neutral-500" title={item.description}>{item.description}</td>
-                          <td className="max-w-[200px] truncate px-4 py-3">
-                            <a href={item.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-brand-600 hover:underline dark:text-brand-400">
-                              {item.url}
-                              <ExternalLink className="h-3 w-3 shrink-0" />
-                            </a>
+                          <td className="px-4 py-3">
+                            {item.contenido ? (
+                              <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                                <span className="h-2 w-2 rounded-full bg-green-500" />
+                                Con contenido
+                              </span>
+                            ) : (
+                              <span className="text-xs text-neutral-400">Sin contenido</span>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex gap-1">
+                              <a href={`/instructivos/${item.id}`} target="_blank" rel="noreferrer">
+                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0"><Eye className="h-4 w-4" /></Button>
+                              </a>
                               <Button size="sm" variant="ghost" onClick={() => startEdit(item)} className="h-8 w-8 p-0"><Pencil className="h-4 w-4" /></Button>
                               <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)} className="h-8 w-8 p-0 text-red-500"><Trash2 className="h-4 w-4" /></Button>
                             </div>

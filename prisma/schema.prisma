@@ -49,6 +49,7 @@ model User {
   comments        Comment[]
   attachments     Attachment[]
   auditLogs       AuditLog[]
+  notes           Note[]
 
   @@index([email])
   @@index([role])
@@ -206,4 +207,20 @@ model StockItem {
   categoria   StockCategoria @relation(fields: [categoriaId], references: [id])
 
   @@index([categoriaId])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  titulo    String
+  contenido String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  autorId String
+  autor   User   @relation(fields: [autorId], references: [id])
+
+  @@index([autorId])
+  @@index([titulo])
+  @@index([createdAt])
 }

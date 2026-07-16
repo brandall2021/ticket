@@ -1,8 +1,11 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
-import { Header } from "@/components/layout/header"
 import { ThemeProvider } from "@/components/theme/theme-provider"
+import { Sidebar } from "@/components/layout/sidebar"
+import { MobileSidebar } from "@/components/layout/mobile-sidebar"
+import { ToastProvider } from "@/components/toast-provider"
+import { auth } from "@/lib/auth"
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] })
@@ -12,16 +15,24 @@ export const metadata: Metadata = {
   description: "Sistema de tickets de soporte",
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth()
+  const role = session?.user?.role ?? ""
+
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full">
         <ThemeProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-neutral-200 bg-white py-4 text-center text-sm text-neutral-500 dark:border-navy-700 dark:bg-navy-800 dark:text-neutral-400">
-            &copy; 2026 softgroup.com.ar
-          </footer>
+          <ToastProvider />
+          <div className="flex min-h-screen">
+            <div className="hidden lg:block">
+              <Sidebar role={role} />
+            </div>
+            <MobileSidebar role={role} />
+            <main className="flex-1 overflow-x-hidden">
+              {children}
+            </main>
+          </div>
         </ThemeProvider>
       </body>
     </html>

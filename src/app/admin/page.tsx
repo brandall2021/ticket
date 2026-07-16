@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Ticket, Users, FolderOpen, BarChart3, Link2, UserCog, FileText } from "lucide-react"
+import { Ticket, Users, FolderOpen, BarChart3, Link2, UserCog, FileText, Database } from "lucide-react"
+import { BackupButton } from "@/components/backup-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ROLES_ADMIN_AGENT_EDITOR, ROLES_ADMIN_AGENT } from "@/lib/constants"
@@ -75,6 +76,7 @@ export default async function AdminDashboard() {
               Tickets
             </Button>
           </Link>
+          <BackupButton />
         </div>
       </div>
 

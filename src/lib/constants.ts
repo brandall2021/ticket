@@ -5,6 +5,7 @@ export const ROLES = {
   CLIENT: "CLIENT" as const,
 }
 
+export const ROLES_ADMIN: string[] = [ROLES.ADMIN]
 export const ROLES_ADMIN_AGENT: string[] = [ROLES.ADMIN, ROLES.AGENT]
 export const ROLES_ADMIN_AGENT_EDITOR: string[] = [ROLES.ADMIN, ROLES.AGENT, ROLES.EDITOR]
 export const ROLES_ADMIN_EDITOR: string[] = [ROLES.ADMIN, ROLES.EDITOR]

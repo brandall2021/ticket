@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Activity, Server, History, FileBarChart } from "lucide-react"
+import { Activity, Server, History, FileBarChart, Radar } from "lucide-react"
 
 const monitorNav = [
   { href: "/admin/monitor", label: "Dashboard", icon: Activity },
   { href: "/admin/monitor/hosts", label: "Hosts", icon: Server },
+  { href: "/admin/monitor/scan", label: "Scan", icon: Radar },
   { href: "/admin/monitor/history", label: "Historial", icon: History },
   { href: "/admin/monitor/reports", label: "Reportes", icon: FileBarChart },
 ]

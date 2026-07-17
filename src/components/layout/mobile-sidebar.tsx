@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { Menu, X, LogOut, Sun, Moon, User } from "lucide-react"
 import {
@@ -31,10 +31,15 @@ interface MobileSidebarProps {
   userName?: string
 }
 
-export function MobileSidebar({ role, userName }: MobileSidebarProps) {
+export function MobileSidebar({ role: serverRole, userName: serverName }: MobileSidebarProps) {
+  const { data: session } = useSession()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [dark, setDark] = useState(false)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const role = serverRole || (session?.user as any)?.role || ""
+  const userName = serverName || session?.user?.name || ""
 
   useEffect(() => { setOpen(false) }, [pathname])
 

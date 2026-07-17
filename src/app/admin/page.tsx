@@ -2,11 +2,11 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Ticket, Users, FolderOpen, BarChart3, Link2, UserCog, FileText, Database } from "lucide-react"
+import { Ticket, Users, FolderOpen, BarChart3, Link2, UserCog, FileText, Database, Activity, Server, History, FileBarChart } from "lucide-react"
 import { BackupButton } from "@/components/backup-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ROLES_ADMIN_AGENT_EDITOR, ROLES_ADMIN_AGENT } from "@/lib/constants"
+import { ROLES_ADMIN_AGENT_EDITOR, ROLES_ADMIN_AGENT, ROLES_ADMIN } from "@/lib/constants"
 
 export default async function AdminDashboard() {
   const session = await auth()
@@ -15,6 +15,7 @@ export default async function AdminDashboard() {
   }
 
   const isAdminOrAgent = ROLES_ADMIN_AGENT.includes(session.user.role)
+  const isAdmin = ROLES_ADMIN.includes(session.user.role)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -76,6 +77,34 @@ export default async function AdminDashboard() {
               Tickets
             </Button>
           </Link>
+          {isAdmin && (
+            <>
+              <Link href="/admin/monitor">
+                <Button variant="outline" size="sm">
+                  <Activity className="h-4 w-4" />
+                  Monitor
+                </Button>
+              </Link>
+              <Link href="/admin/monitor/hosts">
+                <Button variant="outline" size="sm">
+                  <Server className="h-4 w-4" />
+                  PCs
+                </Button>
+              </Link>
+              <Link href="/admin/monitor/history">
+                <Button variant="outline" size="sm">
+                  <History className="h-4 w-4" />
+                  Historial
+                </Button>
+              </Link>
+              <Link href="/admin/monitor/reports">
+                <Button variant="outline" size="sm">
+                  <FileBarChart className="h-4 w-4" />
+                  Reportes
+                </Button>
+              </Link>
+            </>
+          )}
           <BackupButton />
         </div>
       </div>

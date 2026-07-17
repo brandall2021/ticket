@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme/theme-provider"
+import { AuthProvider } from "@/components/auth-provider"
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileSidebar } from "@/components/layout/mobile-sidebar"
 import { ToastProvider } from "@/components/toast-provider"
@@ -23,18 +24,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
-        <ThemeProvider>
-          <ToastProvider />
-          <div className="flex min-h-screen">
-            <div className="hidden lg:block">
-              <Sidebar role={role} userName={userName} />
+        <AuthProvider>
+          <ThemeProvider>
+            <ToastProvider />
+            <div className="flex min-h-screen">
+              <div className="hidden lg:block">
+                <Sidebar role={role} userName={userName} />
+              </div>
+              <MobileSidebar role={role} userName={userName} />
+              <main className="flex-1 overflow-x-hidden">
+                {children}
+              </main>
             </div>
-            <MobileSidebar role={role} userName={userName} />
-            <main className="flex-1 overflow-x-hidden">
-              {children}
-            </main>
-          </div>
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   )

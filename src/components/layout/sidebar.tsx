@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { usePathname } from "next/navigation"
+import { signOut, useSession } from "next-auth/react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
@@ -31,9 +31,9 @@ interface SidebarProps {
   userName?: string
 }
 
-export function Sidebar({ role, userName }: SidebarProps) {
+export function Sidebar({ role: serverRole, userName: serverName }: SidebarProps) {
+  const { data: session } = useSession()
   const pathname = usePathname()
-  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [dark, setDark] = useState(false)
 
@@ -48,10 +48,17 @@ export function Sidebar({ role, userName }: SidebarProps) {
     localStorage.setItem("theme", isDark ? "dark" : "light")
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const role = serverRole || (session?.user as any)?.role || ""
+  const userName = serverName || session?.user?.name || ""
+
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
     return pathname.startsWith(href)
   }
+
+  const isAdmin = role === "ADMIN"
+  const showAdmin = role && ["ADMIN", "AGENT", "EDITOR"].includes(role)
 
   return (
     <aside
@@ -71,7 +78,7 @@ export function Sidebar({ role, userName }: SidebarProps) {
           </Link>
         ))}
 
-        {role && ["ADMIN", "AGENT", "EDITOR"].includes(role) && (
+        {showAdmin && (
           <>
             <div className="my-2 border-t border-[var(--border-color)]" />
             {!collapsed && (
@@ -80,7 +87,7 @@ export function Sidebar({ role, userName }: SidebarProps) {
               </span>
             )}
             {adminItems
-              .filter(item => item.href !== "/admin/monitor" || role === "ADMIN")
+              .filter(item => item.href !== "/admin/monitor" || isAdmin)
               .map(item => (
               <Link
                 key={item.href}

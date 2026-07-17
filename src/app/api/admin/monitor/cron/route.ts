@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { pingMultiple } from "@/lib/ping"
 import { sendEmail, hostDownEmail, hostRecoveredEmail } from "@/lib/email"
+import { createNotificationsForRole } from "@/lib/notifications"
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization")
@@ -72,7 +73,7 @@ async function runCronCheck() {
     if (statusChanged && host.notificarAdmin) {
       const admins = await prisma.user.findMany({
         where: { role: "ADMIN", activo: true },
-        select: { email: true, name: true },
+        select: { id: true, email: true, name: true },
       })
 
       if (admins.length > 0) {
@@ -86,10 +87,30 @@ async function runCronCheck() {
               const email = hostDownEmail({ nombre: host.nombre, ip: host.ip, detalle: host.detalle, grupo, fecha, url })
               await sendEmail({ to: admin.email, subject: email.subject, html: email.html })
               notifications.push(`${host.nombre} DOWN -> ${admin.email}`)
+
+              await prisma.notification.create({
+                data: {
+                  usuarioId: admin.id,
+                  tipo: "monitor",
+                  titulo: "Host caído",
+                  mensaje: `${host.nombre} (${host.ip}) está DOWN${grupo ? ` - Grupo: ${grupo}` : ""}`,
+                  url,
+                },
+              }).catch(() => {})
             } else if (newStatus === "UP" && oldStatus === "DOWN") {
               const email = hostRecoveredEmail({ nombre: host.nombre, ip: host.ip, detalle: host.detalle, grupo, fecha, url })
               await sendEmail({ to: admin.email, subject: email.subject, html: email.html })
               notifications.push(`${host.nombre} UP -> ${admin.email}`)
+
+              await prisma.notification.create({
+                data: {
+                  usuarioId: admin.id,
+                  tipo: "monitor",
+                  titulo: "Host recuperado",
+                  mensaje: `${host.nombre} (${host.ip}) está UP${grupo ? ` - Grupo: ${grupo}` : ""}`,
+                  url,
+                },
+              }).catch(() => {})
             }
           } catch (err) {
             console.error(`Error sending email for ${host.nombre}:`, err)

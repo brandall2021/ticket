@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit"
 import { requireAuth } from "@/lib/api-auth"
+import { createNotificationsForUsers } from "@/lib/notifications"
 
 export async function POST(
   req: NextRequest,
@@ -47,6 +48,26 @@ export async function POST(
     "COMENTARIO",
     `Comentario en ticket ${id}`
   )
+
+  const ticketFull = await prisma.ticket.findUnique({
+    where: { id },
+    select: { titulo: true, clienteId: true, agenteId: true },
+  })
+
+  if (ticketFull) {
+    const actorName = authResult.session!.user.name || "Alguien"
+    const notifyUserIds: string[] = []
+    if (ticketFull.clienteId !== authResult.session!.user.id) notifyUserIds.push(ticketFull.clienteId)
+    if (ticketFull.agenteId && ticketFull.agenteId !== authResult.session!.user.id) notifyUserIds.push(ticketFull.agenteId)
+
+    await createNotificationsForUsers(
+      notifyUserIds,
+      "ticket",
+      "Nuevo comentario",
+      `${actorName} comentó en: ${ticketFull.titulo}`,
+      `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/tickets/${id}`
+    )
+  }
 
   return NextResponse.json(comment, { status: 201 })
 }

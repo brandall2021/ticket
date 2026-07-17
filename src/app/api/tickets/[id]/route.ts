@@ -5,7 +5,8 @@ import { sendEmail, ticketNotificationEmail, ticketCerradoEmail } from "@/lib/em
 import { requireRole } from "@/lib/api-auth"
 import { requireAuth } from "@/lib/api-auth"
 import { actualizarTicketSchema } from "@/lib/schemas"
-import { STATUS_TRANSITIONS } from "@/lib/constants"
+import { STATUS_TRANSITIONS, STATUS_LABELS } from "@/lib/constants"
+import { createNotification, createNotificationsForUsers } from "@/lib/notifications"
 
 export async function GET(
   _req: NextRequest,
@@ -157,10 +158,24 @@ export async function PATCH(
     `Ticket ${id}: ${changes.join(", ")}`
   )
 
+  const ticketUrl = `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/tickets/${id}`
+  const actorName = authResult.session!.user.name || "Alguien"
+
   if (parsed.data.status && parsed.data.status !== existing.status) {
-    const ticketUrl = `${
-      process.env.NEXT_PUBLIC_URL || "http://localhost:3000"
-    }/tickets/${id}`
+    const statusLabel = STATUS_LABELS[parsed.data.status] || parsed.data.status
+
+    const notifyUserIds: string[] = []
+    if (existing.clienteId !== authResult.session!.user.id) notifyUserIds.push(existing.clienteId)
+    if (ticket.agenteId && ticket.agenteId !== authResult.session!.user.id) notifyUserIds.push(ticket.agenteId)
+
+    await createNotificationsForUsers(
+      notifyUserIds,
+      "ticket",
+      "Cambio de estado",
+      `${existing.titulo} → ${statusLabel}`,
+      ticketUrl
+    )
+
     const esCerrado = parsed.data.status === "CERRADO"
 
     if (esCerrado) {
@@ -196,6 +211,22 @@ export async function PATCH(
           url: ticketUrl,
           nombre: ticket.agente.name,
         }),
+      })
+    }
+  }
+
+  if (parsed.data.agenteId && parsed.data.agenteId !== existing.agenteId) {
+    const agente = await prisma.user.findUnique({
+      where: { id: parsed.data.agenteId },
+      select: { name: true },
+    })
+    if (agente && parsed.data.agenteId !== authResult.session!.user.id) {
+      await createNotification({
+        usuarioId: parsed.data.agenteId,
+        tipo: "ticket",
+        titulo: "Te asignaron un ticket",
+        mensaje: `${actorName} te asignó: ${existing.titulo}`,
+        url: ticketUrl,
       })
     }
   }

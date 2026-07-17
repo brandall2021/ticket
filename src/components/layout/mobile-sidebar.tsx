@@ -9,6 +9,7 @@ import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, Activity
 } from "lucide-react"
+import { NotificationBell } from "@/components/notification-bell"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -74,9 +75,12 @@ export function MobileSidebar({ role: serverRole, userName: serverName }: Mobile
           <aside className="absolute left-0 top-0 h-full w-72 bg-[var(--sidebar-bg)] shadow-xl">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-4">
               <span className="text-lg font-bold">Menú</span>
-              <button onClick={() => setOpen(false)}>
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <button onClick={() => setOpen(false)}>
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             <nav className="flex flex-col gap-1 p-3">
               {navItems.map(item => (

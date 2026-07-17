@@ -6,9 +6,10 @@ import { signOut, useSession } from "next-auth/react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
-  Activity, LogOut, Sun, Moon, User
+  Activity, LogOut, Sun, Moon, User, Bell
 } from "lucide-react"
 import { useState, useEffect } from "react"
+import { NotificationBell } from "@/components/notification-bell"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -104,6 +105,16 @@ export function Sidebar({ role: serverRole, userName: serverName }: SidebarProps
       </nav>
 
       <div className="flex flex-col gap-1 px-3">
+        {!collapsed && (
+          <div className="flex items-center justify-between px-3 py-1">
+            <NotificationBell />
+          </div>
+        )}
+        {collapsed && (
+          <div className="flex justify-center py-1">
+            <NotificationBell />
+          </div>
+        )}
         {!collapsed && userName && (
           <Link
             href="/perfil"

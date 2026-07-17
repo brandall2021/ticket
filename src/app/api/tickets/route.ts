@@ -4,6 +4,7 @@ import { logAudit } from "@/lib/audit"
 import { sendEmail, ticketNotificationEmail } from "@/lib/email"
 import { requireAuth } from "@/lib/api-auth"
 import { crearTicketSchema } from "@/lib/schemas"
+import { createNotificationsForRole } from "@/lib/notifications"
 
 export async function GET(req: NextRequest) {
   const authResult = await requireAuth()
@@ -98,6 +99,17 @@ export async function POST(req: NextRequest) {
   })
 
   await logAudit(authResult.session!.user.id, "CREAR_TICKET", `Ticket ${ticket.id} creado`)
+
+  const ticketUrl = `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/tickets/${ticket.id}`
+
+  await createNotificationsForRole(
+    "AGENT",
+    "ticket",
+    "Nuevo ticket",
+    `${ticket.cliente.name} creó: ${ticket.titulo}`,
+    ticketUrl,
+    authResult.session!.user.id
+  )
 
   const agents = await prisma.user.findMany({
     where: { role: "AGENT", activo: true },

@@ -51,6 +51,7 @@ model User {
   auditLogs       AuditLog[]
   notes           Note[]
   passwords       Password[]
+  notifications   Notification[]
 
   @@index([email])
   @@index([role])
@@ -293,4 +294,21 @@ model MonitorPing {
   @@index([hostId])
   @@index([createdAt])
   @@index([exitoso])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  tipo      String
+  titulo    String
+  mensaje   String
+  url       String?
+  leida     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  usuarioId String
+  usuario   User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([leida])
+  @@index([createdAt])
 }

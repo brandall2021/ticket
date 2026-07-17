@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { stdout } = await execAsync(
-      `nmap -sn -O --open -T4 ${range}`,
+      `nmap -sn --open -T4 ${range}`,
       { timeout: 300000 }
     )
 

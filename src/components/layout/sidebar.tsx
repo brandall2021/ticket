@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
-  Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight
+  Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight, Activity
 } from "lucide-react"
 import { useState } from "react"
 
@@ -21,6 +21,7 @@ const navItems = [
 const adminItems = [
   { href: "/admin", label: "Admin", icon: Settings },
   { href: "/admin/contrasenas", label: "Contraseñas", icon: Shield },
+  { href: "/admin/monitor", label: "Monitorización", icon: Activity },
 ]
 
 interface SidebarProps {
@@ -62,7 +63,9 @@ export function Sidebar({ role }: SidebarProps) {
                 Administración
               </span>
             )}
-            {adminItems.map(item => (
+            {adminItems
+              .filter(item => item.href !== "/admin/monitor" || role === "ADMIN")
+              .map(item => (
               <Link
                 key={item.href}
                 href={item.href}

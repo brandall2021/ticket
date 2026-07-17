@@ -243,3 +243,53 @@ model Password {
   @@index([funcion])
   @@index([ip])
 }
+
+model MonitorGroup {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  color     String   @default("#3b82f6")
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hosts MonitorHost[]
+
+  @@index([activo])
+}
+
+model MonitorHost {
+  id          String   @id @default(cuid())
+  nombre      String
+  ip          String
+  detalle     String?
+  activo      Boolean  @default(true)
+  lastStatus  String?
+  lastPingAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  grupoId String?
+  grupo   MonitorGroup? @relation(fields: [grupoId], references: [id])
+
+  pings MonitorPing[]
+
+  @@index([ip])
+  @@index([grupoId])
+  @@index([activo])
+}
+
+model MonitorPing {
+  id        String   @id @default(cuid())
+  exitoso   Boolean
+  latencia  Float?
+  timeout   Int      @default(4000)
+  detalle   String?
+  createdAt DateTime @default(now())
+
+  hostId String
+  host   MonitorHost @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@index([hostId])
+  @@index([createdAt])
+  @@index([exitoso])
+}

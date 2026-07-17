@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
-  Calculator, Settings, LayoutDashboard
+  Calculator, Settings, LayoutDashboard, Activity
 } from "lucide-react"
 
 const navItems = [
@@ -22,6 +22,7 @@ const navItems = [
 const adminItems = [
   { href: "/admin", label: "Admin", icon: Settings },
   { href: "/admin/contrasenas", label: "Contraseñas", icon: Shield },
+  { href: "/admin/monitor", label: "Monitorización", icon: Activity },
 ]
 
 interface MobileSidebarProps {
@@ -75,7 +76,9 @@ export function MobileSidebar({ role }: MobileSidebarProps) {
                   <span className="px-4 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                     Administración
                   </span>
-                  {adminItems.map(item => (
+                  {adminItems
+                    .filter(item => item.href !== "/admin/monitor" || role === "ADMIN")
+                    .map(item => (
                     <Link
                       key={item.href}
                       href={item.href}

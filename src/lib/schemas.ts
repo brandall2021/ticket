@@ -45,3 +45,15 @@ export const crearStockCategoriaSchema = z.object({
   color: z.string().optional(),
   icono: z.string().optional(),
 })
+
+export const crearMonitorGroupSchema = z.object({
+  nombre: z.string().min(1, "Nombre requerido"),
+  color: z.string().optional(),
+})
+
+export const crearMonitorHostSchema = z.object({
+  nombre: z.string().min(1, "Nombre requerido"),
+  ip: z.string().min(1, "IP requerida"),
+  detalle: z.string().optional(),
+  grupoId: z.string().nullable().optional(),
+})

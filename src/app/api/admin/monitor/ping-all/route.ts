@@ -8,7 +8,11 @@ export async function POST(req: NextRequest) {
   const authResult = await requireRole(ROLES_ADMIN)
   if (authResult.error) return authResult.error
 
-  const { hostIds } = await req.json()
+  let hostIds: string[] | undefined
+  try {
+    const body = await req.json()
+    hostIds = body?.hostIds
+  } catch { /* empty body */ }
 
   const hosts = hostIds?.length
     ? await prisma.monitorHost.findMany({ where: { id: { in: hostIds }, activo: true } })

@@ -11,7 +11,7 @@ export async function PATCH(
   if (authResult.error) return authResult.error
 
   const { id } = await params
-  const { nombre, ip, detalle, grupoId, activo } = await req.json()
+  const { nombre, ip, detalle, grupoId, activo, notificarAdmin } = await req.json()
 
   const data: Record<string, unknown> = {}
   if (nombre !== undefined) data.nombre = nombre
@@ -19,6 +19,7 @@ export async function PATCH(
   if (detalle !== undefined) data.detalle = detalle
   if (grupoId !== undefined) data.grupoId = grupoId || null
   if (activo !== undefined) data.activo = activo
+  if (notificarAdmin !== undefined) data.notificarAdmin = notificarAdmin
 
   const host = await prisma.monitorHost.update({
     where: { id },

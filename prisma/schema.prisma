@@ -258,15 +258,16 @@ model MonitorGroup {
 }
 
 model MonitorHost {
-  id          String   @id @default(cuid())
-  nombre      String
-  ip          String
-  detalle     String?
-  activo      Boolean  @default(true)
-  lastStatus  String?
-  lastPingAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  nombre         String
+  ip             String
+  detalle        String?
+  activo         Boolean  @default(true)
+  notificarAdmin Boolean  @default(false)
+  lastStatus     String?
+  lastPingAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   grupoId String?
   grupo   MonitorGroup? @relation(fields: [grupoId], references: [id])

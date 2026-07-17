@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Plus, Trash2, Edit, Wifi, WifiOff, Radio, Server, Search, Filter, X } from "lucide-react"
+import { Plus, Trash2, Edit, Radio, Server, Search, Filter, X, Bell, BellOff } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface MonitorGroup {
@@ -16,6 +16,7 @@ interface MonitorHost {
   ip: string
   detalle: string | null
   activo: boolean
+  notificarAdmin: boolean
   lastStatus: string | null
   lastPingAt: string | null
   grupoId: string | null
@@ -39,6 +40,7 @@ export default function MonitorHostsPage() {
   const [ip, setIp] = useState("")
   const [detalle, setDetalle] = useState("")
   const [grupoId, setGrupoId] = useState("")
+  const [notificarAdmin, setNotificarAdmin] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -68,7 +70,7 @@ export default function MonitorHostsPage() {
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, ip, detalle: detalle || null, grupoId: grupoId || null }),
+      body: JSON.stringify({ nombre, ip, detalle: detalle || null, grupoId: grupoId || null, notificarAdmin }),
     })
     if (!res.ok) {
       const data = await res.json()
@@ -81,13 +83,13 @@ export default function MonitorHostsPage() {
   }
 
   function resetForm() {
-    setNombre(""); setIp(""); setDetalle(""); setGrupoId("")
+    setNombre(""); setIp(""); setDetalle(""); setGrupoId(""); setNotificarAdmin(false)
     setEditando(null); setShowForm(false); setSaving(false); setError("")
   }
 
   function startEdit(host: MonitorHost) {
     setEditando(host); setNombre(host.nombre); setIp(host.ip)
-    setDetalle(host.detalle || ""); setGrupoId(host.grupoId || ""); setShowForm(true)
+    setDetalle(host.detalle || ""); setGrupoId(host.grupoId || ""); setNotificarAdmin(host.notificarAdmin); setShowForm(true)
   }
 
   async function deleteHost(id: string) {
@@ -184,6 +186,13 @@ export default function MonitorHostsPage() {
               <option value="">Sin grupo</option>
               {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
             </select>
+            <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300 sm:col-span-2 lg:col-span-4">
+              <button type="button" onClick={() => setNotificarAdmin(!notificarAdmin)} className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${notificarAdmin ? "bg-blue-600" : "bg-neutral-300 dark:bg-neutral-600"}`}>
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${notificarAdmin ? "translate-x-4" : "translate-x-0"}`} />
+              </button>
+              {notificarAdmin ? <Bell className="h-4 w-4 text-blue-500" /> : <BellOff className="h-4 w-4 text-neutral-400" />}
+              Notificar por email cuando esté caído
+            </label>
             <div className="flex gap-2 sm:col-span-2 lg:col-span-4">
               <button type="submit" disabled={saving} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50">{saving ? "Guardando..." : "Guardar"}</button>
               <button type="button" onClick={resetForm} className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700">Cancelar</button>
@@ -223,6 +232,7 @@ export default function MonitorHostsPage() {
                 <th className="px-4 py-3 text-xs font-medium text-neutral-500">Nombre</th>
                 <th className="px-4 py-3 text-xs font-medium text-neutral-500">IP</th>
                 <th className="px-4 py-3 text-xs font-medium text-neutral-500">Grupo</th>
+                <th className="px-4 py-3 text-xs font-medium text-neutral-500">Alertas</th>
                 <th className="px-4 py-3 text-xs font-medium text-neutral-500">Latencia</th>
                 <th className="px-4 py-3 text-xs font-medium text-neutral-500">Último Ping</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-neutral-500">Acciones</th>
@@ -234,7 +244,7 @@ export default function MonitorHostsPage() {
                   <tr key={i}><td colSpan={7} className="px-4 py-4"><div className="h-10 animate-pulse rounded bg-neutral-100 dark:bg-neutral-700/50" /></td></tr>
                 ))
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-16 text-center text-neutral-500">No hay hosts configurados</td></tr>
+                <tr><td colSpan={8} className="px-4 py-16 text-center text-neutral-500">No hay hosts configurados</td></tr>
               ) : (
                 filtered.map(host => {
                   const lastPing = host.pings[0]
@@ -262,6 +272,13 @@ export default function MonitorHostsPage() {
                           <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: `${host.grupo.color}15`, color: host.grupo.color }}>
                             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: host.grupo.color }} />
                             {host.grupo.nombre}
+                          </span>
+                        ) : <span className="text-xs text-neutral-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {host.notificarAdmin ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-500">
+                            <Bell className="h-3 w-3" /> Email
                           </span>
                         ) : <span className="text-xs text-neutral-400">—</span>}
                       </td>

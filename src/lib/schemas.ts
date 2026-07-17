@@ -56,4 +56,5 @@ export const crearMonitorHostSchema = z.object({
   ip: z.string().min(1, "IP requerida"),
   detalle: z.string().optional(),
   grupoId: z.string().nullable().optional(),
+  notificarAdmin: z.boolean().optional(),
 })

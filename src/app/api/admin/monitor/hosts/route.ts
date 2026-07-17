@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       ip: parsed.data.ip,
       detalle: parsed.data.detalle,
       grupoId: parsed.data.grupoId || null,
+      notificarAdmin: parsed.data.notificarAdmin ?? false,
     },
     include: { grupo: true },
   })

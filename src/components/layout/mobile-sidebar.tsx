@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { signOut } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LogOut, Sun, Moon, User } from "lucide-react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, Activity
@@ -27,13 +28,26 @@ const adminItems = [
 
 interface MobileSidebarProps {
   role?: string
+  userName?: string
 }
 
-export function MobileSidebar({ role }: MobileSidebarProps) {
+export function MobileSidebar({ role, userName }: MobileSidebarProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [dark, setDark] = useState(false)
 
   useEffect(() => { setOpen(false) }, [pathname])
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"))
+  }, [])
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle("dark")
+    const isDark = document.documentElement.classList.contains("dark")
+    setDark(isDark)
+    localStorage.setItem("theme", isDark ? "dark" : "light")
+  }
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
@@ -91,6 +105,33 @@ export function MobileSidebar({ role }: MobileSidebarProps) {
                 </>
               )}
             </nav>
+
+            <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--border-color)] p-3 space-y-1">
+              {userName && (
+                <Link
+                  href="/perfil"
+                  className={`sidebar-item ${isActive("/perfil") ? "active" : ""}`}
+                  onClick={() => setOpen(false)}
+                >
+                  <User className="icon" />
+                  <span className="truncate">{userName}</span>
+                </Link>
+              )}
+              <button
+                onClick={toggleTheme}
+                className="sidebar-item w-full"
+              >
+                {dark ? <Sun className="icon" /> : <Moon className="icon" />}
+                <span>{dark ? "Claro" : "Oscuro"}</span>
+              </button>
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="sidebar-item w-full text-red-500 hover:text-red-600 dark:text-red-400"
+              >
+                <LogOut className="icon" />
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
           </aside>
         </div>
       )}

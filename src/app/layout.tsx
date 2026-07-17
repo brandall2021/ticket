@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
   const role = session?.user?.role ?? ""
+  const userName = session?.user?.name ?? ""
 
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
@@ -26,9 +27,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ToastProvider />
           <div className="flex min-h-screen">
             <div className="hidden lg:block">
-              <Sidebar role={role} />
+              <Sidebar role={role} userName={userName} />
             </div>
-            <MobileSidebar role={role} />
+            <MobileSidebar role={role} userName={userName} />
             <main className="flex-1 overflow-x-hidden">
               {children}
             </main>

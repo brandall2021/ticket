@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { signOut } from "next-auth/react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
-  Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight, Activity
+  Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
+  Activity, LogOut, Sun, Moon, User
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -26,11 +28,25 @@ const adminItems = [
 
 interface SidebarProps {
   role?: string
+  userName?: string
 }
 
-export function Sidebar({ role }: SidebarProps) {
+export function Sidebar({ role, userName }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
+  const [dark, setDark] = useState(false)
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"))
+  }, [])
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle("dark")
+    const isDark = document.documentElement.classList.contains("dark")
+    setDark(isDark)
+    localStorage.setItem("theme", isDark ? "dark" : "light")
+  }
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
@@ -80,7 +96,33 @@ export function Sidebar({ role }: SidebarProps) {
         )}
       </nav>
 
-      <div className="px-3">
+      <div className="flex flex-col gap-1 px-3">
+        {!collapsed && userName && (
+          <Link
+            href="/perfil"
+            className={`sidebar-item ${isActive("/perfil") ? "active" : ""}`}
+            title="Mi perfil"
+          >
+            <User className="icon" />
+            <span className="truncate">{userName}</span>
+          </Link>
+        )}
+        <button
+          onClick={toggleTheme}
+          className="sidebar-item"
+          title={dark ? "Modo claro" : "Modo oscuro"}
+        >
+          {dark ? <Sun className="icon" /> : <Moon className="icon" />}
+          {!collapsed && <span>{dark ? "Claro" : "Oscuro"}</span>}
+        </button>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="sidebar-item text-red-500 hover:text-red-600 dark:text-red-400"
+          title="Cerrar sesión"
+        >
+          <LogOut className="icon" />
+          {!collapsed && <span>Salir</span>}
+        </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="sidebar-item w-full justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)]"

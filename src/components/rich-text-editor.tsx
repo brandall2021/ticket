@@ -77,7 +77,10 @@ export function RichTextEditor({
           if (item.type.startsWith("image/")) {
             event.preventDefault()
             const file = item.getAsFile()
-            if (file) uploadAndInsertImage(file)
+            if (file) {
+              console.log("Pasting image:", file.name, file.type, file.size)
+              uploadAndInsertImage(file)
+            }
             return true
           }
         }
@@ -98,13 +101,16 @@ export function RichTextEditor({
           method: "POST",
           body: formData,
         })
-        if (!res.ok) return
+        if (!res.ok) {
+          console.error("Upload failed:", res.status, await res.text())
+          return
+        }
         const data = await res.json()
         if (data.archivos?.[0]?.url) {
           editor.chain().focus().setImage({ src: data.archivos[0].url }).run()
         }
-      } catch {
-        // silencioso
+      } catch (err) {
+        console.error("Upload error:", err)
       }
     },
     [editor],

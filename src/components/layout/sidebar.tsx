@@ -6,7 +6,7 @@ import { signOut, useSession } from "next-auth/react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
-  Activity, LogOut, Sun, Moon, User, Bell
+  Activity, LogOut, Sun, Moon, User, Bell, ScrollText, CalendarClock
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { NotificationBell } from "@/components/notification-bell"
@@ -25,6 +25,8 @@ const adminItems = [
   { href: "/admin", label: "Admin", icon: Settings },
   { href: "/admin/contrasenas", label: "Contraseñas", icon: Shield },
   { href: "/admin/monitor", label: "Monitorización", icon: Activity },
+  { href: "/admin/maintenance", label: "Mantenimientos", icon: CalendarClock },
+  { href: "/admin/audit", label: "Auditoría", icon: ScrollText },
 ]
 
 interface SidebarProps {

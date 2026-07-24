@@ -12,7 +12,7 @@ export async function POST(
   if (authResult.error) return authResult.error
 
   const { id } = await params
-  const { contenido } = await req.json()
+  const { contenido, internal } = await req.json()
 
   if (!contenido || typeof contenido !== "string" || !contenido.trim()) {
     return NextResponse.json({ error: "Contenido requerido" }, { status: 400 })
@@ -34,11 +34,15 @@ export async function POST(
     return NextResponse.json({ error: "No autorizado" }, { status: 403 })
   }
 
+  const isInternal =
+    internal === true && authResult.session!.user.role !== "CLIENT"
+
   const comment = await prisma.comment.create({
     data: {
       contenido: contenido.trim(),
       ticketId: id,
       autorId: authResult.session!.user.id,
+      internal: isInternal,
     },
     include: { autor: { select: { name: true, image: true } } },
   })
@@ -70,4 +74,40 @@ export async function POST(
   }
 
   return NextResponse.json(comment, { status: 201 })
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authResult = await requireAuth()
+  if (authResult.error) return authResult.error
+
+  const { id } = await params
+
+  const ticket = await prisma.ticket.findUnique({
+    where: { id },
+    select: { id: true, clienteId: true },
+  })
+
+  if (!ticket) {
+    return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 })
+  }
+
+  const isClient = authResult.session!.user.role === "CLIENT"
+
+  if (isClient && ticket.clienteId !== authResult.session!.user.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+  }
+
+  const comments = await prisma.comment.findMany({
+    where: {
+      ticketId: id,
+      ...(isClient ? { internal: false } : {}),
+    },
+    include: { autor: { select: { name: true, image: true } } },
+    orderBy: { createdAt: "asc" },
+  })
+
+  return NextResponse.json(comments)
 }

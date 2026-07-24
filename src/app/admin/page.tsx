@@ -2,11 +2,12 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Ticket, Users, FolderOpen, BarChart3, Link2, UserCog, FileText, Database, Activity, Server, History, FileBarChart } from "lucide-react"
+import { Ticket, Users, FolderOpen, BarChart3, Link2, UserCog, FileText, Database, Activity, Server, History, FileBarChart, CalendarClock } from "lucide-react"
 import { BackupButton } from "@/components/backup-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ROLES_ADMIN_AGENT_EDITOR, ROLES_ADMIN_AGENT, ROLES_ADMIN } from "@/lib/constants"
+import { AnalyticsCharts } from "@/components/admin/analytics-charts"
 
 export default async function AdminDashboard() {
   const session = await auth()
@@ -103,6 +104,18 @@ export default async function AdminDashboard() {
                   Reportes
                 </Button>
               </Link>
+              <Link href="/admin/maintenance">
+                <Button variant="outline" size="sm">
+                  <CalendarClock className="h-4 w-4" />
+                  Mantenimientos
+                </Button>
+              </Link>
+              <Link href="/admin/audit">
+                <Button variant="outline" size="sm">
+                  <FileBarChart className="h-4 w-4" />
+                  Auditoría
+                </Button>
+              </Link>
             </>
           )}
           <BackupButton />
@@ -160,6 +173,8 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {isAdmin && <AnalyticsCharts />}
     </div>
   )
 }

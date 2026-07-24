@@ -58,6 +58,7 @@ export default async function TicketDetailPage({
       agente: { select: { name: true, email: true, id: true } },
       categoria: { select: { nombre: true, color: true } },
       comments: {
+        where: session.user.role === "CLIENT" ? { internal: false } : {},
         include: { autor: { select: { name: true, image: true } } },
         orderBy: { createdAt: "asc" },
       },
@@ -155,7 +156,14 @@ export default async function TicketDetailPage({
                   </p>
                 ) : (
                   ticket.comments.map((comment) => (
-                    <div key={comment.id} className="px-5 py-4">
+                    <div
+                      key={comment.id}
+                      className={`px-5 py-4 ${
+                        comment.internal
+                          ? "border-l-4 border-amber-400 bg-amber-50/50 dark:border-amber-500 dark:bg-amber-900/10"
+                          : ""
+                      }`}
+                    >
                       <div className="mb-1 flex items-center gap-2">
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-400">
                           {(comment.autor.name || "U")[0]}
@@ -163,6 +171,11 @@ export default async function TicketDetailPage({
                         <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                           {comment.autor.name || "Usuario"}
                         </span>
+                        {comment.internal && (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                            Interno
+                          </span>
+                        )}
                         <span className="text-xs text-neutral-400">
                           {formatShortDate(comment.createdAt)}
                         </span>
@@ -176,7 +189,7 @@ export default async function TicketDetailPage({
                 )}
               </div>
               <div className="border-t border-neutral-100 px-5 py-4 dark:border-navy-700">
-                <CommentForm ticketId={ticket.id} />
+                <CommentForm ticketId={ticket.id} userRole={session.user.role} />
               </div>
             </CardContent>
           </Card>

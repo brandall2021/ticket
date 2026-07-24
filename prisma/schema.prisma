@@ -102,6 +102,7 @@ model Categoria {
 model Comment {
   id        String   @id @default(cuid())
   contenido String
+  internal  Boolean  @default(false)
   createdAt DateTime @default(now())
 
   ticketId  String
@@ -111,6 +112,7 @@ model Comment {
   autor   User   @relation(fields: [autorId], references: [id])
 
   @@index([ticketId])
+  @@index([internal])
 }
 
 model Attachment {
@@ -311,4 +313,20 @@ model Notification {
   @@index([usuarioId])
   @@index([leida])
   @@index([createdAt])
+}
+
+model Maintenance {
+  id          String   @id @default(cuid())
+  titulo      String
+  descripcion String?
+  scheduledAt DateTime
+  duration    Int      @default(60)
+  status      String   @default("PROGRAMADO")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hostIds String
+
+  @@index([scheduledAt])
+  @@index([status])
 }

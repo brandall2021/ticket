@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/lib/api-auth"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
+import { buildUploadArtifact } from "@/lib/upload-utils.js"
 
 export async function POST(req: NextRequest) {
   const authResult = await requireAuth()
@@ -19,22 +20,19 @@ export async function POST(req: NextRequest) {
   for (const file of files) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+    const artifact = buildUploadArtifact(file, buffer)
 
-    let ext = path.extname(file.name)
-    if (!ext) {
-      const mimeExt = file.type.split("/").pop()
-      ext = mimeExt ? `.${mimeExt}` : ".png"
+    if (artifact.persistToDisk && artifact.filename) {
+      const dir = path.join(process.cwd(), "public", "uploads")
+      const filepath = path.join(dir, artifact.filename)
+
+      await mkdir(dir, { recursive: true })
+      await writeFile(filepath, buffer)
     }
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`
-    const dir = path.join(process.cwd(), "public", "uploads")
-    const filepath = path.join(dir, filename)
-
-    await mkdir(dir, { recursive: true })
-    await writeFile(filepath, buffer)
 
     uploaded.push({
-      nombre: file.name || `imagen${ext}`,
-      url: `/uploads/${filename}`,
+      nombre: artifact.nombre,
+      url: artifact.url,
     })
   }
 

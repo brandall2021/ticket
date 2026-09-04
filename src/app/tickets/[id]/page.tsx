@@ -203,18 +203,34 @@ export default async function TicketDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-5">
-                <div className="space-y-2">
-                  {ticket.attachments.map((attachment) => (
-                    <a
-                      key={attachment.id}
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2 text-sm text-brand-600 hover:underline dark:text-brand-400"
-                    >
-                      {attachment.nombre}
-                    </a>
-                  ))}
+                <div className="space-y-3">
+                  {ticket.attachments.map((attachment) => {
+                    const isImage = /^data:image\//.test(attachment.url) || /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(attachment.url)
+                    if (isImage) {
+                      return (
+                        <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer" className="block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={attachment.url}
+                            alt={attachment.nombre}
+                            className="max-h-64 w-auto rounded-lg border border-neutral-200 object-contain dark:border-navy-700"
+                          />
+                          <span className="mt-1 block text-xs text-brand-600 dark:text-brand-400">{attachment.nombre}</span>
+                        </a>
+                      )
+                    }
+                    return (
+                      <a
+                        key={attachment.id}
+                        href={attachment.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 text-sm text-brand-600 hover:underline dark:text-brand-400"
+                      >
+                        {attachment.nombre}
+                      </a>
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>

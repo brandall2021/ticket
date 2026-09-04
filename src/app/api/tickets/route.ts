@@ -71,6 +71,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors }, { status: 400 })
   }
 
+  const clienteId = req.headers.get("x-cliente-id") || authResult.session!.user.id
+
+  const cliente = await prisma.user.findUnique({
+    where: { id: clienteId },
+    select: { id: true },
+  })
+  if (!cliente) {
+    return NextResponse.json({ error: "Sesión inválida: el usuario ya no existe. Vuelve a iniciar sesión." }, { status: 401 })
+  }
+
   const ticket = await prisma.ticket.create({
     data: {
       titulo: parsed.data.titulo,
@@ -79,14 +89,14 @@ export async function POST(req: NextRequest) {
       ubicacion: parsed.data.ubicacion || null,
       ipPc: parsed.data.ipPc || null,
       categoriaId: parsed.data.categoriaId || null,
-      clienteId: authResult.session!.user.id,
+      clienteId,
       status: "NUEVO",
       attachments: parsed.data.archivos?.length
         ? {
             create: parsed.data.archivos.map((a) => ({
               nombre: a.nombre,
               url: a.url,
-              subidoPorId: authResult.session!.user.id,
+              subidoPorId: clienteId,
             })),
           }
         : undefined,

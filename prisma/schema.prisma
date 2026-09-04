@@ -70,7 +70,7 @@ model Ticket {
   updatedAt   DateTime     @updatedAt
 
   clienteId String
-  cliente   User   @relation("Creator", fields: [clienteId], references: [id])
+  cliente   User   @relation("Creator", fields: [clienteId], references: [id], onDelete: Cascade)
 
   agenteId  String?
   agente    User?   @relation("AssignedAgent", fields: [agenteId], references: [id])

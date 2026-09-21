@@ -330,3 +330,49 @@ model Maintenance {
   @@index([scheduledAt])
   @@index([status])
 }
+
+model TipoEquipo {
+  id        String  @id @default(cuid())
+  nombre    String  @unique
+  color     String  @default("#3b82f6")
+  activo    Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  equipos Equipo[]
+
+  @@index([activo])
+}
+
+model EstadoEquipo {
+  id        String  @id @default(cuid())
+  nombre    String  @unique
+  color     String  @default("#22c55e")
+  activo    Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  equipos Equipo[]
+
+  @@index([activo])
+}
+
+model Equipo {
+  id           String   @id @default(cuid())
+  nroInventario String  @unique
+  marca        String
+  modelo       String
+  serie        String?
+  ubicacion    String?
+  ipPc         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tipoId  String
+  tipo    TipoEquipo   @relation(fields: [tipoId], references: [id])
+  estadoId String
+  estado  EstadoEquipo @relation(fields: [estadoId], references: [id])
+
+  @@index([tipoId])
+  @@index([estadoId])
+  @@index([nroInventario])
+  @@index([marca])
+}

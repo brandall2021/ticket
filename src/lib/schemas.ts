@@ -58,3 +58,24 @@ export const crearMonitorHostSchema = z.object({
   grupoId: z.string().nullable().optional(),
   notificarAdmin: z.boolean().optional(),
 })
+
+export const crearEquipoSchema = z.object({
+  tipoId: z.string().min(1, "Tipo requerido"),
+  estadoId: z.string().min(1, "Estado requerido"),
+  nroInventario: z.string().min(1, "N° inventario requerido"),
+  marca: z.string().min(1, "Marca requerida"),
+  modelo: z.string().min(1, "Modelo requerido"),
+  serie: z.string().optional().nullable(),
+  ubicacion: z.string().optional().nullable(),
+  ipPc: z.string().optional().nullable(),
+})
+
+export const crearTipoEquipoSchema = z.object({
+  nombre: z.string().min(1, "Nombre requerido"),
+  color: z.string().optional(),
+})
+
+export const crearEstadoEquipoSchema = z.object({
+  nombre: z.string().min(1, "Nombre requerido"),
+  color: z.string().optional(),
+})

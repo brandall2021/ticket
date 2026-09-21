@@ -79,3 +79,17 @@ export const crearEstadoEquipoSchema = z.object({
   nombre: z.string().min(1, "Nombre requerido"),
   color: z.string().optional(),
 })
+
+export const crearCategoriaWikiSchema = z.object({
+  nombre: z.string().min(1, "Nombre requerido"),
+  color: z.string().optional(),
+  icono: z.string().optional(),
+  orden: z.number().int().optional(),
+})
+
+export const crearArticuloWikiSchema = z.object({
+  categoriaId: z.string().min(1, "Categoría requerida"),
+  titulo: z.string().min(1, "Título requerido"),
+  resumen: z.string().optional().nullable(),
+  contenido: z.string().optional().nullable(),
+})

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import {
-  Ticket, FileText, Link2, Users, StickyNote, Shield,
+  Ticket, FileText, Link2, Users, StickyNote, Shield, BookOpen,
   Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
   Activity, LogOut, Sun, Moon, User, Bell, ScrollText, CalendarClock, PcCase
 } from "lucide-react"
@@ -15,6 +15,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tickets", label: "Tickets", icon: Ticket },
   { href: "/instructivos", label: "Instructivos", icon: FileText },
+  { href: "/wiki", label: "Wiki", icon: BookOpen },
   { href: "/links", label: "Links", icon: Link2 },
   { href: "/internos", label: "Internos", icon: Users },
   { href: "/notas", label: "Notas", icon: StickyNote },
@@ -27,6 +28,7 @@ const adminItems = [
   { href: "/admin/monitor", label: "Monitorización", icon: Activity },
   { href: "/admin/maintenance", label: "Mantenimientos", icon: CalendarClock },
   { href: "/admin/inventario", label: "Inventario", icon: PcCase },
+  { href: "/admin/wiki", label: "Wiki", icon: BookOpen },
   { href: "/admin/audit", label: "Auditoría", icon: ScrollText },
 ]
 

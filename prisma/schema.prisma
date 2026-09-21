@@ -376,3 +376,35 @@ model Equipo {
   @@index([nroInventario])
   @@index([marca])
 }
+
+model CategoriaWiki {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  color     String   @default("#3b82f6")
+  icono     String   @default("BookOpen")
+  activo    Boolean  @default(true)
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  articulos ArticuloWiki[]
+
+  @@index([activo])
+  @@index([orden])
+}
+
+model ArticuloWiki {
+  id         String   @id @default(cuid())
+  titulo     String
+  resumen    String?
+  contenido  String?
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  categoriaId String
+  categoria  CategoriaWiki @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+
+  @@index([categoriaId])
+  @@index([titulo])
+  @@index([activo])
+}

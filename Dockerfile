@@ -8,6 +8,13 @@ WORKDIR /app
 COPY package.json package-lock.json* .npmrc* ./
 RUN npm ci --only=production
 
+# Etapa con el Prisma CLI completo (incluye dependencias transitivas como @prisma/config -> effect)
+FROM base AS migrator
+WORKDIR /migrator
+COPY package.json package-lock.json* .npmrc* ./
+RUN npm ci
+COPY prisma ./prisma
+
 FROM base AS builder
 WORKDIR /app
 COPY package.json package-lock.json* .npmrc* ./
@@ -26,11 +33,9 @@ COPY --from=builder /app/public ./public
 RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs ./public/uploads
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+# Prisma CLI aislado en /migrator con su node_modules completo (no pisa el node_modules del server)
+COPY --from=migrator --chown=nextjs:nodejs /migrator /migrator
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma && node server.js"]
+CMD ["sh", "-c", "cd /migrator && node node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma && cd /app && node server.js"]

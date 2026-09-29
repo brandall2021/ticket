@@ -33,4 +33,4 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma ./node_m
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma && node server.js"]

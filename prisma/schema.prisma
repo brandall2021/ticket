@@ -29,23 +29,23 @@ enum Prioridad {
 }
 
 model User {
-  id        String     @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   apellido  String?
   interno   String?
   cargo     String?
-  email     String     @unique
+  email     String    @unique
   password  String?
   image     String?
   phone     String?
-  role      Role       @default(CLIENT)
-  activo    Boolean    @default(true)
+  role      Role      @default(CLIENT)
+  activo    Boolean   @default(true)
   lastLogin DateTime?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  assignedTickets Ticket[] @relation("AssignedAgent")
-  createdTickets  Ticket[] @relation("Creator")
+  assignedTickets Ticket[]       @relation("AssignedAgent")
+  createdTickets  Ticket[]       @relation("Creator")
   comments        Comment[]
   attachments     Attachment[]
   auditLogs       AuditLog[]
@@ -72,13 +72,13 @@ model Ticket {
   clienteId String
   cliente   User   @relation("Creator", fields: [clienteId], references: [id], onDelete: Cascade)
 
-  agenteId  String?
-  agente    User?   @relation("AssignedAgent", fields: [agenteId], references: [id])
+  agenteId String?
+  agente   User?   @relation("AssignedAgent", fields: [agenteId], references: [id])
 
   categoriaId String?
   categoria   Categoria? @relation(fields: [categoriaId], references: [id])
 
-  comments   Comment[]
+  comments    Comment[]
   attachments Attachment[]
 
   @@index([status])
@@ -105,8 +105,8 @@ model Comment {
   internal  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  ticketId  String
-  ticket    Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   autorId String
   autor   User   @relation(fields: [autorId], references: [id])
@@ -129,14 +129,14 @@ model Attachment {
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  accion     String
-  detalle    String?
-  ip         String?
-  fecha      DateTime @default(now())
+  id      String   @id @default(cuid())
+  accion  String
+  detalle String?
+  ip      String?
+  fecha   DateTime @default(now())
 
   usuarioId String
-  usuario   User     @relation(fields: [usuarioId], references: [id])
+  usuario   User   @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId])
   @@index([accion])
@@ -188,14 +188,14 @@ model Instructivo {
 }
 
 model StockCategoria {
-  id        String      @id @default(cuid())
-  nombre    String      @unique
-  color     String      @default("#3b82f6")
-  icono     String      @default("Package")
-  activo    Boolean     @default(true)
-  createdAt DateTime    @default(now())
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  color     String   @default("#3b82f6")
+  icono     String   @default("Package")
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
 
-  items     StockItem[]
+  items StockItem[]
 
   @@index([activo])
 }
@@ -261,16 +261,16 @@ model MonitorGroup {
 }
 
 model MonitorHost {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   nombre         String
   ip             String
   detalle        String?
-  activo         Boolean  @default(true)
-  notificarAdmin Boolean  @default(false)
+  activo         Boolean   @default(true)
+  notificarAdmin Boolean   @default(false)
   lastStatus     String?
   lastPingAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   grupoId String?
   grupo   MonitorGroup? @relation(fields: [grupoId], references: [id])
@@ -308,7 +308,7 @@ model Notification {
   createdAt DateTime @default(now())
 
   usuarioId String
-  usuario   User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario   User   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@index([usuarioId])
   @@index([leida])
@@ -332,10 +332,10 @@ model Maintenance {
 }
 
 model TipoEquipo {
-  id        String  @id @default(cuid())
-  nombre    String  @unique
-  color     String  @default("#3b82f6")
-  activo    Boolean @default(true)
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  color     String   @default("#3b82f6")
+  activo    Boolean  @default(true)
   createdAt DateTime @default(now())
 
   equipos Equipo[]
@@ -344,10 +344,10 @@ model TipoEquipo {
 }
 
 model EstadoEquipo {
-  id        String  @id @default(cuid())
-  nombre    String  @unique
-  color     String  @default("#22c55e")
-  activo    Boolean @default(true)
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  color     String   @default("#22c55e")
+  activo    Boolean  @default(true)
   createdAt DateTime @default(now())
 
   equipos Equipo[]
@@ -356,20 +356,20 @@ model EstadoEquipo {
 }
 
 model Equipo {
-  id           String   @id @default(cuid())
-  nroInventario String  @unique
-  marca        String
-  modelo       String
-  serie        String?
-  ubicacion    String?
-  ipPc         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  nroInventario String   @unique
+  marca         String
+  modelo        String
+  serie         String?
+  ubicacion     String?
+  ipPc          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  tipoId  String
-  tipo    TipoEquipo   @relation(fields: [tipoId], references: [id])
+  tipoId   String
+  tipo     TipoEquipo   @relation(fields: [tipoId], references: [id])
   estadoId String
-  estado  EstadoEquipo @relation(fields: [estadoId], references: [id])
+  estado   EstadoEquipo @relation(fields: [estadoId], references: [id])
 
   @@index([tipoId])
   @@index([estadoId])
@@ -393,27 +393,27 @@ model CategoriaWiki {
 }
 
 model MikrotikRouter {
-  id            String   @id @default(cuid())
-  nombre        String
-  host          String
-  apiPort       Int      @default(8728)
-  useTls        Boolean  @default(false)
-  user          String   @default("admin")
-  password      String
-  activo        Boolean  @default(true)
-  identidad     String?
-  version       String?
-  boardName     String?
-  cpuLoad       Int?
-  freeMemory    Float?
-  totalMemory   Float?
-  uptime        String?
-  ultimoEstado  String?
-  ultimoError   String?
+  id             String    @id @default(cuid())
+  nombre         String
+  host           String
+  apiPort        Int       @default(8728)
+  useTls         Boolean   @default(false)
+  user           String    @default("admin")
+  password       String
+  activo         Boolean   @default(true)
+  identidad      String?
+  version        String?
+  boardName      String?
+  cpuLoad        Int?
+  freeMemory     Float?
+  totalMemory    Float?
+  uptime         String?
+  ultimoEstado   String?
+  ultimoError    String?
   ultimaConexion DateTime?
-  notificarAdmin Boolean @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  notificarAdmin Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   snapshots MikrotikSnapshot[]
   traffic   MikrotikTraffic[]
@@ -424,57 +424,57 @@ model MikrotikRouter {
 }
 
 model MikrotikSnapshot {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   routerId    String
   router      MikrotikRouter @relation(fields: [routerId], references: [id], onDelete: Cascade)
   cpuLoad     Int?
   freeMemory  Float?
   totalMemory Float?
   uptimeSec   Int?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime       @default(now())
 
   @@index([routerId, createdAt])
 }
 
 model MikrotikTraffic {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   routerId  String
   router    MikrotikRouter @relation(fields: [routerId], references: [id], onDelete: Cascade)
   iface     String
-  rxBytes   Float    @default(0)
-  txBytes   Float    @default(0)
-  rxPackets Float    @default(0)
-  txPackets Float    @default(0)
-  createdAt DateTime @default(now())
+  rxBytes   Float          @default(0)
+  txBytes   Float          @default(0)
+  rxPackets Float          @default(0)
+  txPackets Float          @default(0)
+  createdAt DateTime       @default(now())
 
   @@index([routerId, iface, createdAt])
 }
 
 model MikrotikAlert {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   routerId  String
   router    MikrotikRouter @relation(fields: [routerId], references: [id], onDelete: Cascade)
   tipo      String
-  nivel     String   @default("WARNING")
+  nivel     String         @default("WARNING")
   mensaje   String
-  leida     Boolean  @default(false)
-  createdAt DateTime @default(now())
+  leida     Boolean        @default(false)
+  createdAt DateTime       @default(now())
 
   @@index([routerId, createdAt])
   @@index([leida])
 }
 
 model ArticuloWiki {
-  id         String   @id @default(cuid())
-  titulo     String
-  resumen    String?
-  contenido  String?
-  activo     Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  titulo    String
+  resumen   String?
+  contenido String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   categoriaId String
-  categoria  CategoriaWiki @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  categoria   CategoriaWiki @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
 
   @@index([categoriaId])
   @@index([titulo])

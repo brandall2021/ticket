@@ -116,6 +116,15 @@ Cada cambio de estado envía una notificación por email al cliente. Al cerrar u
 | `/api/admin/stock/[id]` | PATCH, DELETE | Actualizar/eliminar item |
 | `/api/admin/stock-categorias` | GET, POST | CRUD categorías de stock |
 | `/api/admin/stock-categorias/[id]` | PATCH, DELETE | Actualizar/eliminar categoría de stock |
+| `/api/admin/mikrotik` | GET, POST | CRUD routers MikroTik |
+| `/api/admin/mikrotik/check` | POST | Probar conexión a un router |
+| `/api/admin/mikrotik/[id]` | GET, POST | Detalle y test de un router |
+| `/api/admin/mikrotik/[id]/live` | GET | Datos en vivo del router (secciones) |
+| `/api/admin/mikrotik/[id]/history` | GET | Snapshots y tráfico histórico |
+| `/api/admin/mikrotik/[id]/alerts` | GET, PATCH | Alertas del router |
+| `/api/admin/mikrotik/[id]/tools` | POST | Ping / traceroute desde el router |
+| `/api/admin/mikrotik/[id]/report` | GET | Exportar CSV (snapshots, tráfico, secciones) |
+| `/api/admin/mikrotik/cron` | GET | Snapshots + alertas automáticas |
 
 ---
 
@@ -135,6 +144,9 @@ SMTP_USER=...
 SMTP_PASS=...
 SMTP_FROM=noreply@recuperocrediticio.com.ar
 NEXT_PUBLIC_URL=http://localhost:3000
+
+# Cron (requerido para snapshots y alertas automáticas)
+CRON_SECRET=clave-aleatoria-para-llamadas-programadas
 ```
 
 ---
@@ -179,6 +191,16 @@ NEXT_PUBLIC_URL=http://localhost:3000
 - Auditoría de acciones (logAudit)
 - Confirmación en acciones destructivas (eliminar usuario, ticket, reenviar credenciales)
 - Solo ADMIN puede eliminar tickets
+
+### Monitoreo MikroTik (solo ADMIN)
+- Registro de routers con credenciales API RouterOS (puerto 8728, TLS 8729 con `useTls`)
+- Dashboard con CPU, memoria, uptime, interfaces y tráfico en tiempo real (polling 5s)
+- Tablas en vivo: interfaces, IPs, DHCP leases, clientes (ARP), firewall filter, NAT, WireGuard (interfaces + peers), rutas y logs
+- Herramientas: ping y traceroute ejecutados **desde el router**
+- Histórico de snapshots (CPU/memoria/uptime) y tráfico por interfaz por hora
+- Alertas automáticas: router offline, CPU alta (>90%), memoria baja (<15%), interfaz caída y recuperación — con notificaciones y email
+- Exportación de reportes CSV (históricos y secciones en vivo)
+- Requiere `CRON_SECRET` y programación de `/api/admin/mikrotik/cron` para snapshots y alertas automáticas
 
 ---
 

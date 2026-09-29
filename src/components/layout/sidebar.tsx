@@ -6,7 +6,7 @@ import { signOut, useSession } from "next-auth/react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield, BookOpen,
   Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
-  Activity, LogOut, Sun, Moon, User, Bell, ScrollText, CalendarClock, PcCase
+  Activity, LogOut, Sun, Moon, User, Bell, ScrollText, CalendarClock, PcCase, Router
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { NotificationBell } from "@/components/notification-bell"
@@ -27,6 +27,7 @@ const adminItems = [
   { href: "/admin/contrasenas", label: "Contraseñas", icon: Shield },
   { href: "/admin/monitor", label: "Monitorización", icon: Activity },
   { href: "/admin/maintenance", label: "Mantenimientos", icon: CalendarClock },
+  { href: "/admin/mikrotik", label: "MikroTik", icon: Router },
   { href: "/admin/inventario", label: "Inventario", icon: PcCase },
   { href: "/admin/wiki", label: "Wiki", icon: BookOpen },
   { href: "/admin/audit", label: "Auditoría", icon: ScrollText },
@@ -93,7 +94,7 @@ export function Sidebar({ role: serverRole, userName: serverName }: SidebarProps
               </span>
             )}
             {adminItems
-              .filter(item => item.href !== "/admin/monitor" || isAdmin)
+              .filter(item => (item.href !== "/admin/monitor" && item.href !== "/admin/mikrotik") || isAdmin)
               .map(item => (
               <Link
                 key={item.href}

@@ -392,6 +392,78 @@ model CategoriaWiki {
   @@index([orden])
 }
 
+model MikrotikRouter {
+  id            String   @id @default(cuid())
+  nombre        String
+  host          String
+  apiPort       Int      @default(8728)
+  useTls        Boolean  @default(false)
+  user          String   @default("admin")
+  password      String
+  activo        Boolean  @default(true)
+  identidad     String?
+  version       String?
+  boardName     String?
+  cpuLoad       Int?
+  freeMemory    Float?
+  totalMemory   Float?
+  uptime        String?
+  ultimoEstado  String?
+  ultimoError   String?
+  ultimaConexion DateTime?
+  notificarAdmin Boolean @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  snapshots MikrotikSnapshot[]
+  traffic   MikrotikTraffic[]
+  alerts    MikrotikAlert[]
+
+  @@index([host])
+  @@index([activo])
+}
+
+model MikrotikSnapshot {
+  id          String   @id @default(cuid())
+  routerId    String
+  router      MikrotikRouter @relation(fields: [routerId], references: [id], onDelete: Cascade)
+  cpuLoad     Int?
+  freeMemory  Float?
+  totalMemory Float?
+  uptimeSec   Int?
+  createdAt   DateTime @default(now())
+
+  @@index([routerId, createdAt])
+}
+
+model MikrotikTraffic {
+  id        String   @id @default(cuid())
+  routerId  String
+  router    MikrotikRouter @relation(fields: [routerId], references: [id], onDelete: Cascade)
+  iface     String
+  rxBytes   Float    @default(0)
+  txBytes   Float    @default(0)
+  rxPackets Float    @default(0)
+  txPackets Float    @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([routerId, iface, createdAt])
+}
+
+model MikrotikAlert {
+  id        String   @id @default(cuid())
+  routerId  String
+  router    MikrotikRouter @relation(fields: [routerId], references: [id], onDelete: Cascade)
+  tipo      String
+  nivel     String   @default("WARNING")
+  mensaje   String
+  leida     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([routerId, createdAt])
+  @@index([leida])
+}
+
 model ArticuloWiki {
   id         String   @id @default(cuid())
   titulo     String

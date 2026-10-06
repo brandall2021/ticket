@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, CalendarClock } from "lucide-react"
 import { WikiIcon } from "@/lib/wiki-icons"
+import { richTextToPlainText } from "@/lib/rich-text"
 
 export default async function WikiArticuloPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -57,10 +58,9 @@ export default async function WikiArticuloPage({ params }: { params: Promise<{ i
       </div>
 
       {articulo.contenido ? (
-        <article
-          className="prose prose-neutral max-w-none dark:prose-invert prose-headings:text-neutral-900 prose-p:text-neutral-700 prose-strong:text-neutral-900 prose-a:text-brand-600 prose-li:text-neutral-700 dark:prose-headings:text-neutral-100 dark:prose-p:text-neutral-300 dark:prose-strong:text-neutral-100 dark:prose-a:text-brand-400 dark:prose-li:text-neutral-300"
-          dangerouslySetInnerHTML={{ __html: articulo.contenido }}
-        />
+        <article className="whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
+          {richTextToPlainText(articulo.contenido)}
+        </article>
       ) : (
         <div className="rounded-lg border border-dashed border-neutral-300 py-16 text-center text-neutral-400 dark:border-navy-600">
           Este artículo no tiene contenido aún. Un administrador o agente puede editarlo desde el panel.

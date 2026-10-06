@@ -102,10 +102,14 @@ export default function NotasPage() {
     fetchNotes(search || undefined)
   }
 
-  function highlightText(text: string, query: string): string {
-    if (!query.trim()) return text
+  function highlightText(text: string, query: string) {
+    if (!query.trim()) return [text]
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")
-    return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">$1</mark>')
+    return text.split(regex).map((part, index) =>
+      part.toLocaleLowerCase().includes(query.toLocaleLowerCase()) ? (
+        <mark key={index} className="rounded bg-yellow-200 px-0.5 dark:bg-yellow-800">{part}</mark>
+      ) : part
+    )
   }
 
   return (
@@ -202,15 +206,13 @@ export default function NotasPage() {
                       {note.pinned && (
                         <Pin className="h-3.5 w-3.5 shrink-0 text-brand-500" />
                       )}
-                      <h3
-                        className="font-semibold text-neutral-900 dark:text-neutral-100 truncate"
-                        dangerouslySetInnerHTML={{ __html: highlightText(note.titulo, search) }}
-                      />
+                      <h3 className="truncate font-semibold text-neutral-900 dark:text-neutral-100">
+                        {highlightText(note.titulo, search)}
+                      </h3>
                     </div>
-                    <p
-                      className="mt-1 text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2"
-                      dangerouslySetInnerHTML={{ __html: highlightText(note.contenido.substring(0, 200), search) }}
-                    />
+                    <p className="mt-1 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400">
+                      {highlightText(note.contenido.substring(0, 200), search)}
+                    </p>
                     <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
                       {new Date(note.updatedAt).toLocaleString("es-AR")}
                     </p>

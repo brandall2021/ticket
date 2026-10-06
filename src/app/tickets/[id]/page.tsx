@@ -12,6 +12,7 @@ import { AssignAgent } from "@/components/assign-agent"
 import { DeleteTicket } from "@/components/delete-ticket"
 import { STATUS_COLORS, PRIORIDAD_COLORS, STATUS_LABELS } from "@/lib/constants"
 import { canReadTicket, ticketCommentFilter } from "@/lib/ticket-access"
+import { richTextToPlainText } from "@/lib/rich-text"
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("es-AR", {
@@ -117,10 +118,9 @@ export default async function TicketDetailPage({
         <div className="space-y-6">
           <Card>
             <CardContent className="p-5">
-              <div
-                className="prose prose-sm max-w-none text-neutral-700 dark:prose-invert dark:text-neutral-300"
-                dangerouslySetInnerHTML={{ __html: ticket.descripcion }}
-              />
+              <div className="whitespace-pre-wrap text-sm text-neutral-700 dark:text-neutral-300">
+                {richTextToPlainText(ticket.descripcion)}
+              </div>
             </CardContent>
           </Card>
 
@@ -180,10 +180,9 @@ export default async function TicketDetailPage({
                           {formatShortDate(comment.createdAt)}
                         </span>
                       </div>
-                      <div
-                        className="prose prose-sm ml-8 max-w-none text-neutral-700 dark:prose-invert dark:text-neutral-300"
-                        dangerouslySetInnerHTML={{ __html: comment.contenido }}
-                      />
+                      <div className="ml-8 whitespace-pre-wrap text-sm text-neutral-700 dark:text-neutral-300">
+                        {richTextToPlainText(comment.contenido)}
+                      </div>
                     </div>
                   ))
                 )}

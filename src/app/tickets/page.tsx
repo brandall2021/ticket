@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Plus, ChevronLeft, ChevronRight, Inbox, SlidersHorizontal, UserRound } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -88,25 +88,29 @@ export default async function TicketsPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-          Tickets
-          <span className="ml-2 text-base font-normal text-neutral-400">
-            ({total})
-          </span>
-        </h1>
+    <div className="mx-auto max-w-7xl px-4 pb-8 pt-16 sm:px-6 lg:py-8">
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <p className="mb-1 text-sm font-medium text-brand-600 dark:text-brand-400">Mesa de ayuda</p>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-3xl">
+            Tickets
+            <span className="ml-2 align-middle text-sm font-medium text-neutral-400">
+              {total}
+            </span>
+          </h1>
+        </div>
         <Link href="/tickets/nuevo">
-          <Button className="gap-2">
+          <Button className="gap-2 shadow-md shadow-brand-600/15">
             <Plus className="h-4 w-4" />
-            Nuevo
+            <span className="hidden sm:inline">Nuevo ticket</span>
+            <span className="sm:hidden">Nuevo</span>
           </Button>
         </Link>
       </div>
 
-      <div className="mb-4 rounded-lg border border-neutral-200 bg-white p-4 dark:border-navy-700 dark:bg-navy-800">
+      <div className="mb-5 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm dark:border-navy-700 dark:bg-navy-800 sm:p-4">
         <form className="space-y-3">
-          <div className="relative min-w-[200px] flex-1">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <Input
               name="q"
@@ -115,23 +119,26 @@ export default async function TicketsPage({
               className="pl-9"
             />
           </div>
-          <div className="flex flex-wrap items-end gap-3">
-            <Select name="status" defaultValue={status || ""}>
+          <div className="flex flex-wrap items-center gap-2">
+            <SlidersHorizontal className="mr-1 hidden h-4 w-4 text-neutral-400 sm:block" />
+            <Select name="status" defaultValue={status || ""} className="min-w-0 flex-1 sm:w-auto sm:flex-none">
               <option value="">Todos los estados</option>
               <option value="NUEVO">Nuevo</option>
               <option value="EN_CURSO">En Curso</option>
               <option value="EN_ESPERA">En Espera</option>
               <option value="CERRADO">Cerrado</option>
             </Select>
-            <Select name="prioridad" defaultValue={prioridad || ""}>
+            <Select name="prioridad" defaultValue={prioridad || ""} className="min-w-0 flex-1 sm:w-auto sm:flex-none">
               <option value="">Todas las prioridades</option>
               <option value="BAJA">Baja</option>
               <option value="MEDIA">Media</option>
               <option value="ALTA">Alta</option>
               <option value="CRITICA">Crítica</option>
             </Select>
-            <Input type="date" name="desde" defaultValue={desde} className="w-36" />
-            <Input type="date" name="hasta" defaultValue={hasta} className="w-36" />
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+              <Input type="date" name="desde" defaultValue={desde} className="w-full sm:w-36" aria-label="Fecha desde" />
+              <Input type="date" name="hasta" defaultValue={hasta} className="w-full sm:w-36" aria-label="Fecha hasta" />
+            </div>
             <Button type="submit" variant="secondary" size="sm">
               <Search className="h-4 w-4" />
               Filtrar
@@ -148,12 +155,64 @@ export default async function TicketsPage({
       </div>
 
       {tickets.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-neutral-300 py-16 text-center text-neutral-400 dark:border-navy-600">
-          No hay tickets
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-white px-6 py-16 text-center dark:border-navy-600 dark:bg-navy-800/50">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-400 dark:bg-navy-700">
+            <Inbox className="h-6 w-6" />
+          </div>
+          <h2 className="mt-4 font-semibold text-neutral-900 dark:text-neutral-100">No encontramos tickets</h2>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-neutral-500">
+            {(status || prioridad || q || desde || hasta)
+              ? "Prueba cambiando o eliminando los filtros aplicados."
+              : "Crea el primer ticket para comenzar a registrar solicitudes."}
+          </p>
+          <div className="mt-5 flex justify-center gap-2">
+            {(status || prioridad || q || desde || hasta) ? (
+              <Link href="/tickets"><Button variant="outline" size="sm">Limpiar filtros</Button></Link>
+            ) : (
+              <Link href="/tickets/nuevo"><Button size="sm"><Plus className="h-4 w-4" />Nuevo ticket</Button></Link>
+            )}
+          </div>
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-navy-700">
+          <div className="space-y-3 md:hidden">
+            {tickets.map((ticket) => (
+              <Link
+                key={ticket.id}
+                href={`/tickets/${ticket.id}`}
+                className="block rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition active:scale-[0.99] dark:border-navy-700 dark:bg-navy-800"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="line-clamp-2 font-semibold leading-snug text-neutral-900 dark:text-neutral-100">
+                    {ticket.titulo}
+                  </h2>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusColor(ticket.status)}`}>
+                    {STATUS_LABELS[ticket.status] || ticket.status}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${prioridadColor(ticket.prioridad)}`}>
+                    {ticket.prioridad}
+                  </span>
+                  {ticket.categoria && (
+                    <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ticket.categoria.color }} />
+                      {ticket.categoria.nombre}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-navy-700">
+                  <span className={`inline-flex items-center gap-1.5 ${ticket.agente ? "" : "font-medium text-amber-600 dark:text-amber-400"}`}>
+                    <UserRound className="h-3.5 w-3.5" />
+                    {ticket.agente?.name || "Sin asignar"}
+                  </span>
+                  <span>{formatDate(ticket.updatedAt)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-xl border border-neutral-200 shadow-sm dark:border-navy-700 md:block">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:border-navy-700 dark:bg-navy-800 dark:text-neutral-400">
@@ -213,7 +272,7 @@ export default async function TicketsPage({
                           {ticket.agente.name}
                         </span>
                       ) : (
-                        <span className="text-neutral-400">—</span>
+                        <span className="font-medium text-amber-600 dark:text-amber-400">Sin asignar</span>
                       )}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-xs text-neutral-500">

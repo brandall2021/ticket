@@ -20,6 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     data: {
       ip: body.ip ?? password.ip,
+      usuario: body.usuario ?? password.usuario,
       contrasena: body.contrasena ?? password.contrasena,
       funcion: body.funcion ?? password.funcion,
       descripcion: body.descripcion ?? password.descripcion,

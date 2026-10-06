@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 interface PasswordEntry {
   id: string
   ip: string
+  usuario: string
   contrasena: string
   funcion: string
   descripcion: string
@@ -27,6 +28,7 @@ export default function ContrasenasPage() {
   const [showEditor, setShowEditor] = useState(false)
   const [editingEntry, setEditingEntry] = useState<PasswordEntry | null>(null)
   const [ip, setIp] = useState("")
+  const [usuario, setUsuario] = useState("")
   const [contrasena, setContrasena] = useState("")
   const [funcion, setFuncion] = useState("")
   const [descripcion, setDescripcion] = useState("")
@@ -53,6 +55,7 @@ export default function ContrasenasPage() {
   function openNew() {
     setEditingEntry(null)
     setIp("")
+    setUsuario("")
     setContrasena("")
     setFuncion("")
     setDescripcion("")
@@ -62,6 +65,7 @@ export default function ContrasenasPage() {
   function openEdit(entry: PasswordEntry) {
     setEditingEntry(entry)
     setIp(entry.ip)
+    setUsuario(entry.usuario)
     setContrasena(entry.contrasena)
     setFuncion(entry.funcion)
     setDescripcion(entry.descripcion)
@@ -70,20 +74,20 @@ export default function ContrasenasPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!ip.trim() || !contrasena.trim() || !funcion.trim() || !descripcion.trim()) return
+    if (!ip.trim() || !usuario.trim() || !contrasena.trim() || !funcion.trim() || !descripcion.trim()) return
     setSaving(true)
 
     if (editingEntry) {
       await fetch(`/api/admin/contrasenas/${editingEntry.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip, contrasena, funcion, descripcion }),
+        body: JSON.stringify({ ip, usuario, contrasena, funcion, descripcion }),
       })
     } else {
       await fetch("/api/admin/contrasenas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip, contrasena, funcion, descripcion }),
+        body: JSON.stringify({ ip, usuario, contrasena, funcion, descripcion }),
       })
     }
 
@@ -126,7 +130,7 @@ export default function ContrasenasPage() {
       <div className="mb-6 relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
         <Input
-          placeholder="Buscar por IP, función, descripción..."
+          placeholder="Buscar por IP, usuario, función o descripción..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="pl-10"
@@ -162,6 +166,16 @@ export default function ContrasenasPage() {
                     value={contrasena}
                     onChange={e => setContrasena(e.target.value)}
                     placeholder="••••••"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Usuario</Label>
+                  <Input
+                    value={usuario}
+                    onChange={e => setUsuario(e.target.value)}
+                    placeholder="admin, soporte, usuario@dominio..."
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -217,11 +231,17 @@ export default function ContrasenasPage() {
             <Card key={entry.id} className="group transition-all hover:shadow-md dark:hover:shadow-navy-700/50">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-4">
+                  <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     <div>
                       <p className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-400">IP</p>
                       <p className="font-mono text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                         {entry.ip}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-400">Usuario</p>
+                      <p className="break-all font-mono text-sm text-neutral-900 dark:text-neutral-100">
+                        {entry.usuario || "—"}
                       </p>
                     </div>
                     <div>
@@ -247,7 +267,7 @@ export default function ContrasenasPage() {
                       <p className="text-sm text-neutral-700 dark:text-neutral-300">{entry.descripcion}</p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex shrink-0 gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openEdit(entry)}>
                       <Pencil className="h-4 w-4" />
                     </Button>

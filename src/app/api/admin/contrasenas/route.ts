@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
   if (q) {
     where.OR = [
       { ip: { contains: q, mode: "insensitive" } },
+      { usuario: { contains: q, mode: "insensitive" } },
       { funcion: { contains: q, mode: "insensitive" } },
       { descripcion: { contains: q, mode: "insensitive" } },
       { contrasena: { contains: q, mode: "insensitive" } },
@@ -38,15 +39,16 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { ip, contrasena, funcion, descripcion } = body
+  const { ip, usuario, contrasena, funcion, descripcion } = body
 
-  if (!ip || !contrasena || !funcion || !descripcion) {
+  if (!ip || !usuario || !contrasena || !funcion || !descripcion) {
     return NextResponse.json({ error: "Todos los campos son requeridos" }, { status: 400 })
   }
 
   const password = await prisma.password.create({
     data: {
       ip,
+      usuario,
       contrasena,
       funcion,
       descripcion,

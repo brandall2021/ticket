@@ -232,6 +232,7 @@ model Note {
 model Password {
   id          String   @id @default(cuid())
   ip          String
+  usuario     String   @default("")
   contrasena  String
   funcion     String
   descripcion String
@@ -245,6 +246,7 @@ model Password {
   @@index([autorId])
   @@index([funcion])
   @@index([ip])
+  @@index([usuario])
 }
 
 model MonitorGroup {

@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/api-auth"
 import { ROLES_ADMIN } from "@/lib/constants"
 import { z } from "zod"
 import { logAudit } from "@/lib/audit"
+import { withoutPassword } from "@/lib/ticket-access"
 
 const crearRouterSchema = z.object({
   nombre: z.string().min(1, "Nombre requerido"),
@@ -25,7 +26,7 @@ export async function GET() {
     orderBy: [{ nombre: "asc" }],
   })
 
-  return NextResponse.json(routers)
+  return NextResponse.json(routers.map(withoutPassword))
 }
 
 export async function POST(req: NextRequest) {
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   await logAudit(authResult.session!.user.id, "CREAR_MIKROTIK", `Router ${router.nombre} (${router.host})`)
 
-  return NextResponse.json(router, { status: 201 })
+  return NextResponse.json(withoutPassword(router), { status: 201 })
 }
 
 export async function PATCH(req: NextRequest) {
@@ -87,7 +88,7 @@ export async function PATCH(req: NextRequest) {
 
   await logAudit(authResult.session!.user.id, "EDITAR_MIKROTIK", `Router ${router.nombre}`)
 
-  return NextResponse.json(router)
+  return NextResponse.json(withoutPassword(router))
 }
 
 export async function DELETE(req: NextRequest) {

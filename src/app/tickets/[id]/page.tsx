@@ -11,6 +11,7 @@ import { CommentForm } from "@/components/comment-form"
 import { AssignAgent } from "@/components/assign-agent"
 import { DeleteTicket } from "@/components/delete-ticket"
 import { STATUS_COLORS, PRIORIDAD_COLORS, STATUS_LABELS } from "@/lib/constants"
+import { canReadTicket, ticketCommentFilter } from "@/lib/ticket-access"
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("es-AR", {
@@ -58,7 +59,7 @@ export default async function TicketDetailPage({
       agente: { select: { name: true, email: true, id: true } },
       categoria: { select: { nombre: true, color: true } },
       comments: {
-        where: session.user.role === "CLIENT" ? { internal: false } : {},
+        where: ticketCommentFilter(session.user.role),
         include: { autor: { select: { name: true, image: true } } },
         orderBy: { createdAt: "asc" },
       },
@@ -69,8 +70,7 @@ export default async function TicketDetailPage({
   if (!ticket) notFound()
 
   if (
-    session.user.role === "CLIENT" &&
-    ticket.clienteId !== session.user.id
+    !canReadTicket({ id: session.user.id!, role: session.user.role }, ticket)
   ) {
     redirect("/tickets")
   }

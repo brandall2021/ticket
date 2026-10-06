@@ -7,6 +7,7 @@ import { requireAuth } from "@/lib/api-auth"
 import { actualizarTicketSchema } from "@/lib/schemas"
 import { STATUS_TRANSITIONS, STATUS_LABELS } from "@/lib/constants"
 import { createNotification, createNotificationsForUsers } from "@/lib/notifications"
+import { canReadTicket, ticketCommentFilter } from "@/lib/ticket-access"
 
 export async function GET(
   _req: NextRequest,
@@ -24,6 +25,7 @@ export async function GET(
       agente: { select: { name: true, email: true } },
       categoria: { select: { nombre: true, color: true } },
       comments: {
+        where: ticketCommentFilter(authResult.session!.user.role),
         include: { autor: { select: { name: true, image: true } } },
         orderBy: { createdAt: "asc" },
       },
@@ -35,7 +37,7 @@ export async function GET(
     return NextResponse.json({ error: "No encontrado" }, { status: 404 })
   }
 
-  if (authResult.session!.user.role === "CLIENT" && ticket.clienteId !== authResult.session!.user.id) {
+  if (!canReadTicket(authResult.session!.user, ticket)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 })
   }
 
@@ -75,7 +77,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await requireAuth()
+  const authResult = await requireRole(["ADMIN", "AGENT"])
   if (authResult.error) return authResult.error
 
   const { id } = await params
@@ -97,6 +99,19 @@ export async function PATCH(
 
   const data: Record<string, unknown> = {}
   const changes: string[] = []
+
+  if (parsed.data.agenteId) {
+    const agent = await prisma.user.findFirst({
+      where: { id: parsed.data.agenteId, activo: true, role: { in: ["ADMIN", "AGENT"] } },
+      select: { id: true },
+    })
+    if (!agent) return NextResponse.json({ error: "Agente invalido" }, { status: 400 })
+  }
+
+  if (parsed.data.ipPc !== undefined) {
+    data.ipPc = parsed.data.ipPc
+    changes.push("IP de PC actualizada")
+  }
 
   if (parsed.data.titulo !== undefined) {
     data.titulo = parsed.data.titulo

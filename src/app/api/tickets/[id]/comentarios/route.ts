@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit"
 import { requireAuth } from "@/lib/api-auth"
 import { createNotificationsForUsers } from "@/lib/notifications"
+import { canManageTickets, canReadTicket, ticketCommentFilter } from "@/lib/ticket-access"
 
 export async function POST(
   req: NextRequest,
@@ -28,14 +29,13 @@ export async function POST(
   }
 
   if (
-    authResult.session!.user.role === "CLIENT" &&
-    ticket.clienteId !== authResult.session!.user.id
+    !canReadTicket(authResult.session!.user, ticket)
   ) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 })
   }
 
   const isInternal =
-    internal === true && authResult.session!.user.role !== "CLIENT"
+    internal === true && canManageTickets(authResult.session!.user.role)
 
   const comment = await prisma.comment.create({
     data: {
@@ -61,7 +61,7 @@ export async function POST(
   if (ticketFull) {
     const actorName = authResult.session!.user.name || "Alguien"
     const notifyUserIds: string[] = []
-    if (ticketFull.clienteId !== authResult.session!.user.id) notifyUserIds.push(ticketFull.clienteId)
+    if (!isInternal && ticketFull.clienteId !== authResult.session!.user.id) notifyUserIds.push(ticketFull.clienteId)
     if (ticketFull.agenteId && ticketFull.agenteId !== authResult.session!.user.id) notifyUserIds.push(ticketFull.agenteId)
 
     await createNotificationsForUsers(
@@ -94,16 +94,14 @@ export async function GET(
     return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 })
   }
 
-  const isClient = authResult.session!.user.role === "CLIENT"
-
-  if (isClient && ticket.clienteId !== authResult.session!.user.id) {
+  if (!canReadTicket(authResult.session!.user, ticket)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 })
   }
 
   const comments = await prisma.comment.findMany({
     where: {
       ticketId: id,
-      ...(isClient ? { internal: false } : {}),
+      ...ticketCommentFilter(authResult.session!.user.role),
     },
     include: { autor: { select: { name: true, image: true } } },
     orderBy: { createdAt: "asc" },

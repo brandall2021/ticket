@@ -14,7 +14,7 @@ export async function requireRole(roles: string[]) {
   if (result.error) return result
 
   if (!roles.includes(result.session!.user.role)) {
-    return { session: null, error: NextResponse.json({ error: "No autorizado" }, { status: 401 }) }
+    return { session: null, error: NextResponse.json({ error: "No autorizado" }, { status: 403 }) }
   }
   return result
 }

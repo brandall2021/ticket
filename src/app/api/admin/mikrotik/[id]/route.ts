@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES_ADMIN } from "@/lib/constants"
 import { testConnection, MikrotikError } from "@/lib/mikrotik"
+import { withoutPassword } from "@/lib/ticket-access"
 
 export async function GET(
   _req: NextRequest,
@@ -56,7 +57,7 @@ export async function POST(
       },
     })
 
-    return NextResponse.json({ ok: true, info, router: updated })
+    return NextResponse.json({ ok: true, info, router: withoutPassword(updated) })
   } catch (err) {
     const msg = err instanceof MikrotikError ? err.message : err instanceof Error ? err.message : String(err)
     await prisma.mikrotikRouter.update({

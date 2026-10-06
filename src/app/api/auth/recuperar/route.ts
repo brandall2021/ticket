@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
+import { createHash } from "node:crypto"
 import { prisma } from "@/lib/prisma"
 import { sendEmail, resetPasswordEmail } from "@/lib/email"
 
@@ -24,7 +25,8 @@ export async function POST(req: Request) {
       )
     }
 
-    const token = jwt.sign({ email }, process.env.AUTH_SECRET!, { expiresIn: "1h" })
+    const version = createHash("sha256").update(user.password).digest("hex")
+    const token = jwt.sign({ email, version, purpose: "password-reset" }, process.env.AUTH_SECRET!, { expiresIn: "1h", audience: "password-reset" })
     const resetUrl = `${process.env.NEXTAUTH_URL}/restablecer/${token}`
 
     await sendEmail({

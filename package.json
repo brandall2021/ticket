@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "tsx --test tests/*.test.ts tests/*.test.js",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

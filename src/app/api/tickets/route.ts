@@ -5,6 +5,7 @@ import { sendEmail, ticketNotificationEmail } from "@/lib/email"
 import { requireAuth } from "@/lib/api-auth"
 import { crearTicketSchema } from "@/lib/schemas"
 import { createNotificationsForRole } from "@/lib/notifications"
+import { canManageTickets } from "@/lib/ticket-access"
 
 export async function GET(req: NextRequest) {
   const authResult = await requireAuth()
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")))
   const skip = (page - 1) * limit
 
-  if (role === "CLIENT") {
+  if (!canManageTickets(role)) {
     const [tickets, total] = await Promise.all([
       prisma.ticket.findMany({
         where: { clienteId: userId },
@@ -73,6 +74,10 @@ export async function POST(req: NextRequest) {
 
   const clienteId = req.headers.get("x-cliente-id") || authResult.session!.user.id
 
+  if (clienteId !== authResult.session!.user.id && !canManageTickets(authResult.session!.user.role)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+  }
+
   const cliente = await prisma.user.findUnique({
     where: { id: clienteId },
     select: { id: true },
@@ -96,7 +101,7 @@ export async function POST(req: NextRequest) {
             create: parsed.data.archivos.map((a) => ({
               nombre: a.nombre,
               url: a.url,
-              subidoPorId: clienteId,
+              subidoPorId: authResult.session!.user.id,
             })),
           }
         : undefined,

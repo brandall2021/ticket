@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES_ADMIN } from "@/lib/constants"
-import { runPingTool, runTracerouteTool, MikrotikError } from "@/lib/mikrotik"
+import { runPingTool, runTracerouteTool, MikrotikError, mikrotikConfigFromRouter } from "@/lib/mikrotik"
 import { z } from "zod"
 
 const pingSchema = z.object({
@@ -29,13 +29,7 @@ export async function POST(
   const router = await prisma.mikrotikRouter.findUnique({ where: { id } })
   if (!router) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
 
-  const config = {
-    host: router.host,
-    apiPort: router.apiPort,
-    useTls: router.useTls,
-    user: router.user,
-    password: router.password,
-  }
+  const config = mikrotikConfigFromRouter(router)
 
   try {
     if (action === "ping") {

@@ -8,6 +8,12 @@ import {
   parseUptimeSec,
   formatUptime,
   MikrotikError,
+  encryptMikrotikPassword,
+  hasMikrotikEncryptionKey,
+  isEncryptedMikrotikPassword,
+  mikrotikConfigFromRouter,
+  wasMikrotikRouterUp,
+  getMikrotikAlertCooldownMinutes,
   type MikrotikRouterConfig,
 } from "@/lib/mikrotik"
 
@@ -42,13 +48,13 @@ async function runCronCheck() {
   let alertasCreadas = 0
 
   for (const router of routers) {
-    const config: MikrotikRouterConfig = {
-      host: router.host,
-      apiPort: router.apiPort,
-      useTls: router.useTls,
-      user: router.user,
-      password: router.password,
+    if (hasMikrotikEncryptionKey() && !isEncryptedMikrotikPassword(router.password)) {
+      await prisma.mikrotikRouter.update({
+        where: { id: router.id },
+        data: { password: encryptMikrotikPassword(router.password) },
+      })
     }
+    const config: MikrotikRouterConfig = mikrotikConfigFromRouter(router)
 
     const prevEstado = router.ultimoEstado
     const result: { router: string; ok: boolean; alertas: number; error?: string } = {
@@ -121,7 +127,7 @@ async function runCronCheck() {
         data: { ultimoEstado: "ERROR", ultimoError: msg, ultimaConexion: new Date() },
       })
 
-      const desdeUp = prevEstado === "OK" || prevEstado === null
+      const desdeUp = wasMikrotikRouterUp(prevEstado)
       if (desdeUp && router.notificarAdmin) {
         await prisma.mikrotikAlert.create({
           data: {
@@ -161,15 +167,7 @@ async function evaluarAlertas(
   let created = 0
 
   if (resource.cpuLoad !== null && resource.cpuLoad >= 90) {
-    await prisma.mikrotikAlert.create({
-      data: {
-        routerId,
-        tipo: "CPU_ALTA",
-        nivel: "WARNING",
-        mensaje: `${nombre}: CPU al ${resource.cpuLoad}%`,
-      },
-    })
-    created += 1
+    if (await createAlertIfDue(routerId, "CPU_ALTA", `${nombre}: CPU al ${resource.cpuLoad}%`)) created += 1
   }
 
   if (
@@ -178,32 +176,41 @@ async function evaluarAlertas(
     resource.totalMemory > 0 &&
     resource.freeMemory / resource.totalMemory < 0.1
   ) {
-    await prisma.mikrotikAlert.create({
-      data: {
-        routerId,
-        tipo: "MEMORIA_BAJA",
-        nivel: "WARNING",
-        mensaje: `${nombre}: menos del 10% de memoria libre`,
-      },
-    })
-    created += 1
+    if (await createAlertIfDue(routerId, "MEMORIA_BAJA", `${nombre}: menos del 10% de memoria libre`)) created += 1
   }
 
   for (const iface of interfaces) {
     if (iface.running === false && iface.disabled === false && iface.name !== "all") {
-      await prisma.mikrotikAlert.create({
-        data: {
-          routerId,
-          tipo: "IFACE_DOWN",
-          nivel: "WARNING",
-          mensaje: `${nombre}: interfaz ${iface.name} caída`,
-        },
-      })
-      created += 1
+      if (await createAlertIfDue(
+        routerId,
+        "IFACE_DOWN",
+        `${nombre}: interfaz ${iface.name} caída`,
+        `interfaz ${iface.name} caída`
+      )) created += 1
     }
   }
 
   return created
+}
+
+async function createAlertIfDue(routerId: string, tipo: string, mensaje: string, mensajeClave?: string): Promise<boolean> {
+  const minutes = getMikrotikAlertCooldownMinutes()
+  const since = new Date(Date.now() - minutes * 60_000)
+  const recent = await prisma.mikrotikAlert.findFirst({
+    where: {
+      routerId,
+      tipo,
+      createdAt: { gte: since },
+      ...(mensajeClave ? { mensaje: { contains: mensajeClave } } : {}),
+    },
+    select: { id: true },
+  })
+  if (recent) return false
+
+  await prisma.mikrotikAlert.create({
+    data: { routerId, tipo, nivel: "WARNING", mensaje },
+  })
+  return true
 }
 
 async function notifyAdmin(nombre: string, estado: string, mensaje: string) {

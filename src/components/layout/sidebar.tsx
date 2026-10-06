@@ -6,10 +6,9 @@ import { signOut, useSession } from "next-auth/react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield, BookOpen,
   Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
-  Activity, LogOut, Sun, Moon, User, Bell, ScrollText, CalendarClock, PcCase, Router
+  Activity, LogOut, ScrollText, CalendarClock, PcCase, Router
 } from "lucide-react"
-import { useState, useEffect } from "react"
-import { NotificationBell } from "@/components/notification-bell"
+import { useState } from "react"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -35,29 +34,15 @@ const adminItems = [
 
 interface SidebarProps {
   role?: string
-  userName?: string
 }
 
-export function Sidebar({ role: serverRole, userName: serverName }: SidebarProps) {
+export function Sidebar({ role: serverRole }: SidebarProps) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  const [dark, setDark] = useState(false)
-
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"))
-  }, [])
-
-  function toggleTheme() {
-    document.documentElement.classList.toggle("dark")
-    const isDark = document.documentElement.classList.contains("dark")
-    setDark(isDark)
-    localStorage.setItem("theme", isDark ? "dark" : "light")
-  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const role = serverRole || (session?.user as any)?.role || ""
-  const userName = serverName || session?.user?.name || ""
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
@@ -111,34 +96,6 @@ export function Sidebar({ role: serverRole, userName: serverName }: SidebarProps
       </nav>
 
       <div className="flex flex-col gap-1 px-3">
-        {!collapsed && (
-          <div className="flex items-center justify-between px-3 py-1">
-            <NotificationBell />
-          </div>
-        )}
-        {collapsed && (
-          <div className="flex justify-center py-1">
-            <NotificationBell />
-          </div>
-        )}
-        {!collapsed && userName && (
-          <Link
-            href="/perfil"
-            className={`sidebar-item ${isActive("/perfil") ? "active" : ""}`}
-            title="Mi perfil"
-          >
-            <User className="icon" />
-            <span className="truncate">{userName}</span>
-          </Link>
-        )}
-        <button
-          onClick={toggleTheme}
-          className="sidebar-item"
-          title={dark ? "Modo claro" : "Modo oscuro"}
-        >
-          {dark ? <Sun className="icon" /> : <Moon className="icon" />}
-          {!collapsed && <span>{dark ? "Claro" : "Oscuro"}</span>}
-        </button>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="sidebar-item text-red-500 hover:text-red-600 dark:text-red-400"

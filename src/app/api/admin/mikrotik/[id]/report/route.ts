@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES_ADMIN } from "@/lib/constants"
-import { resolveSection } from "@/lib/mikrotik"
+import { resolveSection, mikrotikConfigFromRouter } from "@/lib/mikrotik"
 
 const SECTIONS = ["interfaces", "dhcp", "arp", "firewall", "nat", "routes", "logs", "snapshots", "traffic"] as const
 type Section = (typeof SECTIONS)[number]
@@ -85,13 +85,7 @@ export async function GET(
     case "nat":
     case "routes":
     case "logs": {
-      const config = {
-        host: router.host,
-        apiPort: router.apiPort,
-        useTls: router.useTls,
-        user: router.user,
-        password: router.password,
-      }
+      const config = mikrotikConfigFromRouter(router)
       const rows = (await resolveSection(config, section)) as Array<Record<string, unknown>>
 
       const headers: string[] = []

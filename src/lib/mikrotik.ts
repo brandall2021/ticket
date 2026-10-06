@@ -1,4 +1,5 @@
 import { RouterOSAPI } from "node-routeros"
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto"
 import { formatUptime, formatBytes, formatBitrate } from "./format"
 
 export { formatUptime, formatBytes, formatBitrate }
@@ -9,6 +10,72 @@ export interface MikrotikRouterConfig {
   useTls: boolean
   user: string
   password: string
+}
+
+type StoredRouterConfig = Omit<MikrotikRouterConfig, "password"> & { password: string }
+
+const SECRET_PREFIX = "enc:v1:"
+
+function getEncryptionKey(): Buffer {
+  const secret = process.env.MIKROTIK_ENCRYPTION_KEY
+  if (!secret || secret.length < 32) {
+    throw new MikrotikError("MIKROTIK_ENCRYPTION_KEY debe tener al menos 32 caracteres")
+  }
+  return createHash("sha256").update(secret).digest()
+}
+
+export function hasMikrotikEncryptionKey(): boolean {
+  return Boolean(process.env.MIKROTIK_ENCRYPTION_KEY && process.env.MIKROTIK_ENCRYPTION_KEY.length >= 32)
+}
+
+export function isEncryptedMikrotikPassword(value: string): boolean {
+  return value.startsWith(SECRET_PREFIX)
+}
+
+export function encryptMikrotikPassword(value: string): string {
+  if (isEncryptedMikrotikPassword(value)) return value
+  const iv = randomBytes(12)
+  const cipher = createCipheriv("aes-256-gcm", getEncryptionKey(), iv)
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()])
+  const tag = cipher.getAuthTag()
+  return `${SECRET_PREFIX}${iv.toString("base64url")}.${tag.toString("base64url")}.${encrypted.toString("base64url")}`
+}
+
+export function decryptMikrotikPassword(value: string): string {
+  if (!isEncryptedMikrotikPassword(value)) return value
+  const [ivValue, tagValue, encryptedValue] = value.slice(SECRET_PREFIX.length).split(".")
+  if (!ivValue || !tagValue || encryptedValue === undefined) {
+    throw new MikrotikError("Credencial MikroTik cifrada inválida")
+  }
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", getEncryptionKey(), Buffer.from(ivValue, "base64url"))
+    decipher.setAuthTag(Buffer.from(tagValue, "base64url"))
+    return Buffer.concat([
+      decipher.update(Buffer.from(encryptedValue, "base64url")),
+      decipher.final(),
+    ]).toString("utf8")
+  } catch {
+    throw new MikrotikError("No se pudo descifrar la credencial MikroTik")
+  }
+}
+
+export function mikrotikConfigFromRouter(router: StoredRouterConfig): MikrotikRouterConfig {
+  return {
+    host: router.host,
+    apiPort: router.apiPort,
+    useTls: router.useTls,
+    user: router.user,
+    password: decryptMikrotikPassword(router.password),
+  }
+}
+
+export function wasMikrotikRouterUp(state: string | null): boolean {
+  return state === null || state === "OK" || state === "RECUPERADO"
+}
+
+export function getMikrotikAlertCooldownMinutes(value = process.env.MIKROTIK_ALERT_COOLDOWN_MINUTES): number {
+  const configured = Number.parseInt(value || "60", 10)
+  return Number.isFinite(configured) ? Math.min(Math.max(configured, 1), 1440) : 60
 }
 
 interface RosRow {
@@ -271,27 +338,25 @@ export async function runPingTool(config: MikrotikRouterConfig, address: string,
     `=count=${count}`,
     `=size=${size}`,
   ])
-  const results = rows
-    .filter(r => r.status !== undefined)
-    .map(r => ({
+  return summarizePingRows(rows, address, count)
+}
+
+export function summarizePingRows(rows: RosRow[], address: string, requestedCount: number) {
+  const results = rows.map(r => ({
       seq: toInt(r.seq),
       host: r.host || null,
       time: toFloat(r.time),
       ttl: toInt(r.ttl),
-      status: r.status || null,
+      status: r.status || r.timeout || null,
     }))
-  const timeoutRows = rows.filter(r => r.timeout !== undefined)
-  if (timeoutRows.length > 0) {
-    const first = timeoutRows[0]
-    results.push({ seq: toInt(first.seq), host: first.host || null, time: null, ttl: null, status: first.timeout })
-  }
+  const received = results.filter(r => r.status === null && r.time !== null).length
   return {
     target: address,
     results,
-    total: count,
-    sent: results.length,
-    received: results.filter(r => r.status === undefined && r.time !== null).length,
-    lost: results.filter(r => r.status !== undefined || r.time === null).length,
+    total: requestedCount,
+    sent: rows.length,
+    received,
+    lost: rows.length - received,
   }
 }
 

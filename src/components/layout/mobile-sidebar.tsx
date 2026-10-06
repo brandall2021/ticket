@@ -4,12 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { Menu, X, LogOut, Sun, Moon, User, Router } from "lucide-react"
+import { Menu, X, LogOut, Router } from "lucide-react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, Activity
 } from "lucide-react"
-import { NotificationBell } from "@/components/notification-bell"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -30,31 +29,17 @@ const adminItems = [
 
 interface MobileSidebarProps {
   role?: string
-  userName?: string
 }
 
-export function MobileSidebar({ role: serverRole, userName: serverName }: MobileSidebarProps) {
+export function MobileSidebar({ role: serverRole }: MobileSidebarProps) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const [dark, setDark] = useState(false)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const role = serverRole || (session?.user as any)?.role || ""
-  const userName = serverName || session?.user?.name || ""
 
   useEffect(() => { setOpen(false) }, [pathname])
-
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"))
-  }, [])
-
-  function toggleTheme() {
-    document.documentElement.classList.toggle("dark")
-    const isDark = document.documentElement.classList.contains("dark")
-    setDark(isDark)
-    localStorage.setItem("theme", isDark ? "dark" : "light")
-  }
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
@@ -76,12 +61,9 @@ export function MobileSidebar({ role: serverRole, userName: serverName }: Mobile
           <aside className="absolute left-0 top-0 h-full w-72 bg-[var(--sidebar-bg)] shadow-xl">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-4">
               <span className="text-lg font-bold">Menú</span>
-              <div className="flex items-center gap-2">
-                <NotificationBell />
-                <button onClick={() => setOpen(false)}>
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+              <button onClick={() => setOpen(false)}>
+                <X className="h-5 w-5" />
+              </button>
             </div>
             <nav className="flex flex-col gap-1 p-3">
               {navItems.map(item => (
@@ -117,23 +99,6 @@ export function MobileSidebar({ role: serverRole, userName: serverName }: Mobile
             </nav>
 
             <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--border-color)] p-3 space-y-1">
-              {userName && (
-                <Link
-                  href="/perfil"
-                  className={`sidebar-item ${isActive("/perfil") ? "active" : ""}`}
-                  onClick={() => setOpen(false)}
-                >
-                  <User className="icon" />
-                  <span className="truncate">{userName}</span>
-                </Link>
-              )}
-              <button
-                onClick={toggleTheme}
-                className="sidebar-item w-full"
-              >
-                {dark ? <Sun className="icon" /> : <Moon className="icon" />}
-                <span>{dark ? "Claro" : "Oscuro"}</span>
-              </button>
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 className="sidebar-item w-full text-red-500 hover:text-red-600 dark:text-red-400"

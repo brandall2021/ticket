@@ -5,6 +5,12 @@ import { ROLES_ADMIN } from "@/lib/constants"
 import { z } from "zod"
 import { logAudit } from "@/lib/audit"
 import { withoutPassword } from "@/lib/ticket-access"
+import {
+  encryptMikrotikPassword,
+  hasMikrotikEncryptionKey,
+  isEncryptedMikrotikPassword,
+  MikrotikError,
+} from "@/lib/mikrotik"
 
 const crearRouterSchema = z.object({
   nombre: z.string().min(1, "Nombre requerido"),
@@ -26,6 +32,17 @@ export async function GET() {
     orderBy: [{ nombre: "asc" }],
   })
 
+  if (hasMikrotikEncryptionKey()) {
+    await Promise.all(
+      routers
+        .filter(router => !isEncryptedMikrotikPassword(router.password))
+        .map(router => prisma.mikrotikRouter.update({
+          where: { id: router.id },
+          data: { password: encryptMikrotikPassword(router.password) },
+        }))
+    )
+  }
+
   return NextResponse.json(routers.map(withoutPassword))
 }
 
@@ -42,6 +59,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  let encryptedPassword: string
+  try {
+    encryptedPassword = encryptMikrotikPassword(parsed.data.password)
+  } catch (err) {
+    if (err instanceof MikrotikError) {
+      return NextResponse.json({ error: "Cifrado de credenciales MikroTik no configurado" }, { status: 500 })
+    }
+    throw err
+  }
   const router = await prisma.mikrotikRouter.create({
     data: {
       nombre: parsed.data.nombre,
@@ -49,7 +75,7 @@ export async function POST(req: NextRequest) {
       apiPort: parsed.data.apiPort ?? 8728,
       useTls: parsed.data.useTls ?? false,
       user: parsed.data.user,
-      password: parsed.data.password,
+      password: encryptedPassword,
       notificarAdmin: parsed.data.notificarAdmin ?? true,
     },
   })
@@ -78,11 +104,20 @@ export async function PATCH(req: NextRequest) {
 
   const { password, ...rest } = parsed.data
 
+  let encryptedPassword: string | undefined
+  try {
+    encryptedPassword = password === undefined ? undefined : encryptMikrotikPassword(password)
+  } catch (err) {
+    if (err instanceof MikrotikError) {
+      return NextResponse.json({ error: "Cifrado de credenciales MikroTik no configurado" }, { status: 500 })
+    }
+    throw err
+  }
   const router = await prisma.mikrotikRouter.update({
     where: { id },
     data: {
       ...rest,
-      ...(password !== undefined ? { password } : {}),
+      ...(encryptedPassword !== undefined ? { password: encryptedPassword } : {}),
     },
   })
 

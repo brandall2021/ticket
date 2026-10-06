@@ -88,7 +88,7 @@ export default async function TicketsPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-8 pt-16 sm:px-6 lg:py-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="mb-1 text-sm font-medium text-brand-600 dark:text-brand-400">Mesa de ayuda</p>

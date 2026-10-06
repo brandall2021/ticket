@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES_ADMIN } from "@/lib/constants"
-import { testConnection, MikrotikError } from "@/lib/mikrotik"
+import { testConnection, MikrotikError, mikrotikConfigFromRouter } from "@/lib/mikrotik"
 import { withoutPassword } from "@/lib/ticket-access"
 
 export async function GET(
@@ -32,13 +32,7 @@ export async function POST(
   if (!router) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
 
   try {
-    const info = await testConnection({
-      host: router.host,
-      apiPort: router.apiPort,
-      useTls: router.useTls,
-      user: router.user,
-      password: router.password,
-    })
+    const info = await testConnection(mikrotikConfigFromRouter(router))
 
     const fecha = new Date()
     const updated = await prisma.mikrotikRouter.update({

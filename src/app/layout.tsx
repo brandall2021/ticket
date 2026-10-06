@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider"
 import { AuthProvider } from "@/components/auth-provider"
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileSidebar } from "@/components/layout/mobile-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { ToastProvider } from "@/components/toast-provider"
 import { auth } from "@/lib/auth"
 
@@ -20,6 +21,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await auth()
   const role = session?.user?.role ?? ""
   const userName = session?.user?.name ?? ""
+  const authenticated = Boolean(session?.user)
 
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
@@ -28,12 +30,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ThemeProvider>
             <ToastProvider />
             <div className="flex min-h-screen">
-              <div className="hidden lg:block">
-                <Sidebar role={role} userName={userName} />
-              </div>
-              <MobileSidebar role={role} userName={userName} />
-              <main className="flex-1 overflow-x-hidden">
-                {children}
+              {authenticated && (
+                <div className="hidden lg:block">
+                  <Sidebar role={role} />
+                </div>
+              )}
+              {authenticated && <MobileSidebar role={role} />}
+              <main className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+                {authenticated && <Topbar userName={userName} />}
+                <div className="flex-1">{children}</div>
               </main>
             </div>
           </ThemeProvider>

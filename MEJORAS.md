@@ -25,7 +25,7 @@ Verificacion adicional de la sanitizacion: 14 pruebas aprobadas y los 6 archivos
 ## Antes de desplegar
 
 - Los enlaces de recuperacion emitidos antes de esta actualizacion dejan de ser validos. Solicitar uno nuevo.
-- Las credenciales de equipos y routers siguen almacenadas sin cifrado a nivel de aplicacion. Implementar cifrado con una clave externa y migrar los registros existentes antes de tratar el modulo como una boveda de secretos.
+- Configurar `MIKROTIK_ENCRYPTION_KEY` con una clave estable de al menos 32 caracteres antes de crear o editar routers. Las credenciales antiguas se cifran de forma transparente al abrir el listado o ejecutar el cron; no cambiar la clave despues de la migracion.
 - Los documentos existentes y nuevos siguen en public/uploads. Migrarlos a almacenamiento privado con descargas autorizadas por ticket y configurar un volumen persistente.
 - Configurar un limite del cuerpo de la solicitud en el proxy (por ejemplo 16 MB). La comprobacion de tamano de los archivos ocurre despues de interpretar el formulario y no sustituye ese limite.
 - La validacion de tipos de archivos usa los metadatos del formulario: falta validar el contenido real y analizar archivos maliciosos.

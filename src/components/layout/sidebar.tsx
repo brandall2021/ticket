@@ -2,11 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield, BookOpen,
   Calculator, Settings, LayoutDashboard, ChevronLeft, ChevronRight,
-  Activity, LogOut, ScrollText, CalendarClock, PcCase, Router
+  Activity, ScrollText, CalendarClock, PcCase, Router
 } from "lucide-react"
 import { useState } from "react"
 
@@ -96,14 +96,6 @@ export function Sidebar({ role: serverRole }: SidebarProps) {
       </nav>
 
       <div className="flex flex-col gap-1 px-3">
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="sidebar-item text-red-500 hover:text-red-600 dark:text-red-400"
-          title="Cerrar sesión"
-        >
-          <LogOut className="icon" />
-          {!collapsed && <span>Salir</span>}
-        </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="sidebar-item w-full justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)]"

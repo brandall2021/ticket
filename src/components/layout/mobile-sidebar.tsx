@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { Menu, X, LogOut, Router } from "lucide-react"
+import { Menu, X, Router } from "lucide-react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, Activity
@@ -97,16 +97,6 @@ export function MobileSidebar({ role: serverRole }: MobileSidebarProps) {
                 </>
               )}
             </nav>
-
-            <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--border-color)] p-3 space-y-1">
-              <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                className="sidebar-item w-full text-red-500 hover:text-red-600 dark:text-red-400"
-              >
-                <LogOut className="icon" />
-                <span>Cerrar sesión</span>
-              </button>
-            </div>
           </aside>
         </div>
       )}

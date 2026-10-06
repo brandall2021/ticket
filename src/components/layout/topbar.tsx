@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Moon, Sun, User } from "lucide-react"
+import { signOut } from "next-auth/react"
+import { LogOut, Moon, Sun, User } from "lucide-react"
 import { NotificationBell } from "@/components/notification-bell"
 import { useTheme } from "@/components/theme/theme-provider"
 
@@ -37,6 +38,17 @@ export function Topbar({ userName }: { userName: string }) {
         </button>
 
         <NotificationBell />
+
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="flex h-10 items-center gap-2 rounded-lg px-2.5 text-sm text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión"
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="hidden md:inline">Salir</span>
+        </button>
       </div>
     </header>
   )

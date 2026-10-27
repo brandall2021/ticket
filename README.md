@@ -18,6 +18,7 @@ Sistema de gestión de tickets para soporte técnico interno, desarrollado con *
 | **Emails** | Nodemailer |
 | **Validación** | Zod 4 |
 | **Hash de contraseñas** | bcryptjs |
+| **Acceso remoto** | SSH (ssh2 + xterm.js) · RDP (Apache Guacamole) |
 
 ---
 
@@ -67,6 +68,12 @@ Cada cambio de estado envía una notificación por email al cliente. Al cerrar u
 **AuditLog** — Auditoría de acciones
 - `id`, `accion`, `detalle`, `ip`, `fecha`, `usuarioId`
 
+**Server** — Servidores accesibles por SSH/RDP
+- `id`, `nombre`, `host`, `protocolo` (SSH/RDP), `puerto`, `usuario`, `password` / `privateKey` / `passphrase` (cifradas AES-256-GCM), `dominio`, `resolucion`, `seguridad`, `descripcion`, `grupo`, `color`, `activo`, `fingerprint` (huella TOFU), `ultimoEstado`, `ultimoError`, `ultimaConexion`
+
+**ServerSession** — Historial de accesos remotos
+- `id`, `serverId`, `usuarioId`, `protocolo`, `estado` (ACTIVA/CERRADA/ERROR), `detalle`, `ip`, `inicio`, `fin`, `duracion`
+
 **StockCategoria / StockItem** — Módulo de inventario
 - Categorías de stock con items y cantidades
 
@@ -91,6 +98,8 @@ Cada cambio de estado envía una notificación por email al cliente. Al cerrar u
 | `/admin/usuarios` | Gestión de usuarios | ADMIN/AGENT |
 | `/admin/categorias` | Gestión de categorías | ADMIN/AGENT |
 | `/admin/stock` | Gestión de inventario | ADMIN/AGENT |
+| `/admin/servidores` | Listado de servidores SSH/RDP | ADMIN |
+| `/admin/servidores/[id]` | Terminal SSH o escritorio RDP + historial | ADMIN |
 
 ### API
 
@@ -125,6 +134,13 @@ Cada cambio de estado envía una notificación por email al cliente. Al cerrar u
 | `/api/admin/mikrotik/[id]/tools` | POST | Ping / traceroute desde el router |
 | `/api/admin/mikrotik/[id]/report` | GET | Exportar CSV (snapshots, tráfico, secciones) |
 | `/api/admin/mikrotik/cron` | GET | Snapshots + alertas automáticas |
+| `/api/admin/servers` | GET, POST | Listar/crear servidores |
+| `/api/admin/servers/[id]` | GET, PATCH, DELETE | Detalle, editar, eliminar servidor |
+| `/api/admin/servers/check` | POST | Probar TCP + autenticación (SSH) |
+| `/api/admin/servers/[id]/connect` | POST, DELETE | Abrir/cerrar sesión SSH o RDP |
+| `/api/admin/servers/[id]/rdp` | GET | Descargar archivo `.rdp` (sin Guacamole) |
+| `/api/admin/servers/[id]/sesiones` | GET | Historial de accesos del servidor |
+| `/api/admin/ssh/[sessionId]` | GET (SSE), POST, DELETE | Flujo del terminal SSH (salida/entrada/resize) |
 
 ---
 
@@ -147,6 +163,15 @@ NEXT_PUBLIC_URL=http://localhost:3000
 
 # Cron (requerido para snapshots y alertas automáticas)
 CRON_SECRET=clave-aleatoria-para-llamadas-programadas
+
+# Acceso a servidores (SSH/RDP) — mínimo 32 caracteres
+SERVER_ENCRYPTION_KEY=...
+# Gateway Guacamole para RDP en el navegador (opcional; sin esto se descarga .rdp)
+GUACAMOLE_URL=http://guacamole:8080/guacamole
+GUACAMOLE_PUBLIC_URL=/guacamole
+GUACAMOLE_USER=guacadmin
+GUACAMOLE_PASSWORD=...
+GUACAMOLE_DATA_SOURCE=default
 ```
 
 ---
@@ -201,6 +226,67 @@ CRON_SECRET=clave-aleatoria-para-llamadas-programadas
 - Alertas automáticas: router offline, CPU alta (>90%), memoria baja (<15%), interfaz caída y recuperación — con notificaciones y email
 - Exportación de reportes CSV (históricos y secciones en vivo)
 - Requiere `CRON_SECRET` y programación de `/api/admin/mikrotik/cron` para snapshots y alertas automáticas
+
+### Acceso a servidores (SSH / RDP) — solo ADMIN
+- Inventario de servidores con protocolo, puerto, usuario, grupo y descripción
+- Credenciales cifradas en base de datos con AES-256-GCM (`SERVER_ENCRYPTION_KEY`); nunca se devuelven al cliente
+- **SSH**: terminal completo en el navegador (xterm.js) sobre `ssh2`; salida por Server-Sent Events y entrada por POST, sin WebSocket
+- Verificación de huella del host (TOFU): se guarda en la primera conexión y se exige en las siguientes
+- **RDP**: escritorio remoto embebido vía Apache Guacamole (contenedores `guacd` + `guacamole`)
+- Sin Guacamole configurado, el acceso RDP descarga un archivo `.rdp` para abrir con el cliente de Windows
+- Botones Ctrl+Alt+Del, Tecla Windows y pantalla completa en la sesión RDP
+- Prueba de conexión desde el formulario (TCP + autenticación SSH real)
+- Historial de accesos: usuario, IP, inicio, duración, estado y detalle
+- Cierre automático de sesiones SSH inactivas (30 minutos)
+
+---
+
+## Acceso remoto a servidores (SSH / RDP)
+
+Módulo para conectarse a los servidores desde el propio helpdesk, sin depender de herramientas locales del agente.
+
+### SSH (embebido, sin infraestructura extra)
+
+- El backend abre la conexión con `ssh2` y solicita una shell con PTY.
+- La salida viaja al navegador por **Server-Sent Events** (`GET /api/admin/ssh/[sessionId]`) y la entrada vuelve por `POST` (agrupada cada 12 ms). No hace falta WebSocket ni un servidor Node a medida: funciona con `output: "standalone"`.
+- xterm.js se importa dinámicamente en el cliente y el tamaño de la terminal se sincroniza con el servidor.
+- Huella del host (TOFU): se calcula en la primera conexión (`SHA256:…`) y se guarda en `Server.fingerprint`. Si cambia, la conexión se rechaza.
+- Las sesiones inactivas se cierran solas a los 30 minutos; el proceso admite hasta 30 sesiones simultáneas.
+
+### RDP (Apache Guacamole)
+
+El navegador no puede hablar RDP nativamente, así que se usa un gateway:
+
+```
+navegador ──wss──▶ guacamole (Tomcat) ──▶ guacd ──▶ servidor Windows (3389)
+     ▲                     ▲
+     └── token ────────────┘  el backend crea la conexión por REST
+```
+
+1. El backend se autentica contra la API de Guacamole (`GUACAMOLE_USER` / `GUACAMOLE_PASSWORD`).
+2. Crea una conexión RDP efímera con las credenciales descifradas del servidor.
+3. Devuelve al navegador la URL del túnel WebSocket, que consume `guacamole-common-js`.
+4. Al desconectar se elimina la conexión efímera.
+
+`docker-compose.yml` levanta el stack completo (app, PostgreSQL, `guacd`, `guacamole`, su base y nginx):
+
+```bash
+cp .env.example .env      # completar AUTH_SECRET, SERVER_ENCRYPTION_KEY y GUACAMOLE_*
+docker compose up -d --build
+```
+
+nginx sólo publica `= /guacamole/websocket-tunnel`; la interfaz de administración de Guacamole queda inaccesible (ver `deploy/nginx.conf`).
+
+**Sin Guacamole** (por ejemplo en desarrollo local) el acceso RDP sigue disponible en modo degradado: `GET /api/admin/servers/[id]/rdp` genera un archivo `.rdp` que abre `mstsc` en la máquina del agente.
+
+> El usuario por defecto de Guacamole es `guacadmin` / `guacadmin`. Cambiala en la primera puesta en marcha y reflejá el valor en `GUACAMOLE_PASSWORD`: el backend la usa para la API REST.
+
+### Cifrado de credenciales
+
+- Contraseña, clave privada y passphrase se cifran con AES-256-GCM con prefijo `enc:v1:` (mismo criterio que MikroTik).
+- `SERVER_ENCRYPTION_KEY` (mínimo 32 caracteres) o, si no está definida, `MIKROTIK_ENCRYPTION_KEY`.
+- Las credenciales nunca salen por la API: se reemplazan por `tienePassword` / `tieneClavePrivada`.
+- Cambiar la clave deja ilegibles las credenciales guardadas: hay que volver a cargarlas.
 
 ---
 
@@ -259,7 +345,8 @@ src/
 │   ├── admin/           # Panel de administración
 │   │   ├── usuarios/    # CRUD usuarios
 │   │   ├── categorias/  # CRUD categorías de tickets
-│   │   └── stock/       # Módulo de inventario
+│   │   ├── stock/       # Módulo de inventario
+│   │   └── servidores/  # Servidores SSH/RDP (listado + sesión)
 │   ├── api/             # API routes (REST)
 │   ├── login/           # Página de inicio de sesión
 │   ├── register/        # Registro de usuario
@@ -270,9 +357,14 @@ src/
 ├── components/
 │   ├── ui/              # Componentes base (shadcn/ui)
 │   ├── layout/          # Header, layout
+│   ├── servers/         # Formulario, terminal SSH y visor RDP
 │   └── theme/           # Toggle dark/light
 ├── lib/
 │   ├── auth.ts          # Configuración NextAuth
+│   ├── servers.ts       # Cifrado, validaciones y parámetros RDP/Guacamole
+│   ├── ssh-sessions.ts  # Sesiones SSH en memoria (ssh2)
+│   ├── guacamole.ts     # Cliente REST de Guacamole (túneles RDP efímeros)
+│   ├── server-schemas.ts # Validación Zod de servidores
 │   ├── prisma.ts        # Cliente Prisma singleton
 │   ├── email.ts         # Templates de email
 │   ├── constants.ts     # Constantes y configuraciones

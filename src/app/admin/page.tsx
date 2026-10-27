@@ -86,6 +86,12 @@ export default async function AdminDashboard() {
           </Link>
           {isAdmin && (
             <>
+              <Link href="/admin/servidores">
+                <Button variant="outline" size="sm">
+                  <Server className="h-4 w-4" />
+                  Servidores
+                </Button>
+              </Link>
               <Link href="/admin/monitor">
                 <Button variant="outline" size="sm">
                   <Activity className="h-4 w-4" />

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { Menu, X, Router } from "lucide-react"
+import { Menu, X, Router, Server } from "lucide-react"
 import {
   Ticket, FileText, Link2, Users, StickyNote, Shield,
   Calculator, Settings, LayoutDashboard, Activity
@@ -23,6 +23,7 @@ const navItems = [
 const adminItems = [
   { href: "/admin", label: "Admin", icon: Settings },
   { href: "/admin/contrasenas", label: "Contraseñas", icon: Shield },
+  { href: "/admin/servidores", label: "Servidores", icon: Server },
   { href: "/admin/monitor", label: "Monitorización", icon: Activity },
   { href: "/admin/mikrotik", label: "MikroTik", icon: Router },
 ]
@@ -83,7 +84,13 @@ export function MobileSidebar({ role: serverRole }: MobileSidebarProps) {
                     Administración
                   </span>
                   {adminItems
-                    .filter(item => (item.href !== "/admin/monitor" && item.href !== "/admin/mikrotik") || role === "ADMIN")
+                    .filter(
+                      item =>
+                        (item.href !== "/admin/monitor" &&
+                          item.href !== "/admin/mikrotik" &&
+                          item.href !== "/admin/servidores") ||
+                        role === "ADMIN"
+                    )
                     .map(item => (
                     <Link
                       key={item.href}

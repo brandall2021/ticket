@@ -35,10 +35,11 @@ export async function PATCH(req: NextRequest) {
     if (!match) {
       return NextResponse.json({ error: "La contraseña actual no es correcta" }, { status: 400 })
     }
-    if (body.newPassword.length < 6) {
-      return NextResponse.json({ error: "La nueva contraseña debe tener al menos 6 caracteres" }, { status: 400 })
+    if (body.newPassword.length < 10) {
+      return NextResponse.json({ error: "La nueva contraseña debe tener al menos 10 caracteres" }, { status: 400 })
     }
     data.password = await bcrypt.hash(body.newPassword, 12)
+    data.passwordChangedAt = new Date()
   }
 
   const updated = await prisma.user.update({
@@ -48,10 +49,10 @@ export async function PATCH(req: NextRequest) {
   })
 
   if (body.newPassword) {
+    // No se envía la contraseña nueva por correo: el usuario la acaba de elegir.
     const { subject, html } = passwordCambiadaEmail({
       nombre: updated.name,
       email: updated.email,
-      password: body.newPassword,
       url: process.env.NEXTAUTH_URL || "http://localhost:3000",
     })
     await sendEmail({ to: updated.email, subject, html })

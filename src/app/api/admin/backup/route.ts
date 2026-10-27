@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { ROLES_ADMIN } from "@/lib/constants"
+import { logAudit } from "@/lib/audit"
 
 function escapeSql(val: unknown): string {
   if (val === null || val === undefined) return "NULL"
@@ -23,79 +24,90 @@ function generateInsert(table: string, rows: Record<string, unknown>[], columns:
   return lines.join("\n")
 }
 
+/** Columnas reales del schema Prisma (el orden respeta las claves foráneas). */
+const TABLES = [
+  {
+    model: "user",
+    table: "User",
+    columns: ["id", "name", "apellido", "interno", "cargo", "email", "password", "image", "phone", "role", "activo", "lastLogin", "createdAt", "updatedAt"],
+  },
+  { model: "categoria", table: "Categoria", columns: ["id", "nombre", "color", "activo", "createdAt"] },
+  { model: "stockCategoria", table: "StockCategoria", columns: ["id", "nombre", "color", "icono", "activo", "createdAt"] },
+  { model: "stockItem", table: "StockItem", columns: ["id", "nombre", "cantidad", "createdAt", "updatedAt", "categoriaId"] },
+  {
+    model: "ticket",
+    table: "Ticket",
+    columns: ["id", "titulo", "descripcion", "status", "prioridad", "ubicacion", "ipPc", "solucion", "createdAt", "updatedAt", "clienteId", "agenteId", "categoriaId"],
+  },
+  { model: "comment", table: "Comment", columns: ["id", "contenido", "internal", "createdAt", "ticketId", "autorId"] },
+  { model: "attachment", table: "Attachment", columns: ["id", "nombre", "url", "createdAt", "ticketId", "subidoPorId"] },
+  {
+    model: "instructivo",
+    table: "Instructivo",
+    columns: ["id", "title", "description", "url", "imageUrl", "contenido", "activo", "createdAt", "updatedAt"],
+  },
+  {
+    model: "interno",
+    table: "Interno",
+    columns: ["id", "asesor", "turno", "campania", "supervision", "interno", "rol", "activo", "createdAt", "updatedAt"],
+  },
+  { model: "link", table: "Link", columns: ["id", "title", "description", "url", "imageUrl", "activo", "createdAt", "updatedAt"] },
+  { model: "auditLog", table: "AuditLog", columns: ["id", "accion", "detalle", "ip", "fecha", "usuarioId"] },
+] as const
+
 async function generateBackup(userEmail: string) {
-  const [users, tickets, comments, attachments, instructivos, internos, categorias, stockCategorias, stockItems, links, auditLogs] = await Promise.all([
-    prisma.user.findMany(),
-    prisma.ticket.findMany(),
-    prisma.comment.findMany(),
-    prisma.attachment.findMany(),
-    prisma.instructivo.findMany(),
-    prisma.interno.findMany(),
-    prisma.categoria.findMany(),
-    prisma.stockCategoria.findMany(),
-    prisma.stockItem.findMany(),
-    prisma.link.findMany(),
-    prisma.auditLog.findMany(),
-  ])
-
-  const userCols = ["id", "name", "email", "password", "role", "interno", "cargo", "createdAt", "updatedAt"]
-  const ticketCols = ["id", "subject", "description", "status", "prioridad", "createdAt", "updatedAt", "createdById", "assignedToId", "categoriaId", "solucion"]
-  const commentCols = ["id", "content", "createdAt", "authorId", "ticketId"]
-  const attachmentCols = ["id", "filename", "url", "mimeType", "size", "createdAt", "ticketId", "commentId"]
-  const instructivoCols = ["id", "title", "description", "url", "imageUrl", "contenido", "activo", "createdAt", "updatedAt"]
-  const internoCols = ["id", "nombre", "apellido", "email", "area", "cargo", "activo", "createdAt", "updatedAt"]
-  const categoriaCols = ["id", "nombre", "color", "createdAt", "updatedAt"]
-  const stockCategoriaCols = ["id", "nombre", "color"]
-  const stockItemCols = ["id", "nombre", "descripcion", "cantidad", "ubicacion", "categoriaId", "createdAt", "updatedAt"]
-  const linkCols = ["id", "title", "description", "url", "imageUrl", "activo", "createdAt", "updatedAt"]
-  const auditLogCols = ["id", "action", "entity", "entityId", "userId", "changes", "createdAt"]
-
-  const fecha = new Date().toISOString()
-  let sql = `-- Backup de la base de datos ticket\n-- Fecha: ${fecha}\n-- Generado por: ${userEmail}\n\n`
+  const stats: Record<string, number> = {}
+  let sql = `-- Backup de la base de datos helpdesk\n-- Fecha: ${new Date().toISOString()}\n-- Generado por: ${userEmail}\n\n`
   sql += "SET client_encoding = 'UTF8';\n\n"
-  sql += `-- Usuarios (${users.length})\n` + generateInsert("User", users, userCols) + "\n\n"
-  sql += `-- Categorías (${categorias.length})\n` + generateInsert("Categoria", categorias, categoriaCols) + "\n\n"
-  sql += `-- Categorías de Stock (${stockCategorias.length})\n` + generateInsert("StockCategoria", stockCategorias, stockCategoriaCols) + "\n\n"
-  sql += `-- Tickets (${tickets.length})\n` + generateInsert("Ticket", tickets, ticketCols) + "\n\n"
-  sql += `-- Comentarios (${comments.length})\n` + generateInsert("Comment", comments, commentCols) + "\n\n"
-  sql += `-- Adjuntos (${attachments.length})\n` + generateInsert("Attachment", attachments, attachmentCols) + "\n\n"
-  sql += `-- Instructivos (${instructivos.length})\n` + generateInsert("Instructivo", instructivos, instructivoCols) + "\n\n"
-  sql += `-- Internos (${internos.length})\n` + generateInsert("Interno", internos, internoCols) + "\n\n"
-  sql += `-- Items de Stock (${stockItems.length})\n` + generateInsert("StockItem", stockItems, stockItemCols) + "\n\n"
-  sql += `-- Links (${links.length})\n` + generateInsert("Link", links, linkCols) + "\n\n"
-  sql += `-- Audit Logs (${auditLogs.length})\n` + generateInsert("AuditLog", auditLogs, auditLogCols) + "\n"
 
-  const stats = { users: users.length, tickets: tickets.length, comments: comments.length, instructivos: instructivos.length, internos: internos.length, links: links.length }
+  for (const entry of TABLES) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = await (prisma as any)[entry.model].findMany()
+    stats[entry.table] = rows.length
+    sql += `-- ${entry.table} (${rows.length})\n`
+    sql += generateInsert(entry.table, rows, [...entry.columns]) + "\n\n"
+  }
+
   const filename = `backup-helpdesk-${new Date().toISOString().split("T")[0]}.sql`
-
-  return { sql, stats, filename, fecha }
+  return { sql, stats, filename }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const session = await auth()
   if (!session?.user || !ROLES_ADMIN.includes(session.user.role)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
   const { sql, filename } = await generateBackup(session.user.email!)
+  await logAudit(session.user.id!, "DESCARGAR_BACKUP", "Backup completo de la base")
 
   return new NextResponse(sql, {
     status: 200,
     headers: {
       "Content-Type": "application/sql; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "no-store",
     },
   })
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   const session = await auth()
   if (!session?.user || !ROLES_ADMIN.includes(session.user.role)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
+  // El destinatario es configuración del servidor, nunca un valor fijo en el código.
+  const destino = process.env.BACKUP_EMAIL?.trim()
+  if (!destino) {
+    return NextResponse.json(
+      { error: "Configurá BACKUP_EMAIL para enviar el backup por correo" },
+      { status: 400 }
+    )
+  }
+
   try {
-    const { sql, stats, filename, fecha } = await generateBackup(session.user.email!)
+    const { sql, stats, filename } = await generateBackup(session.user.email!)
 
     const transporter = (await import("nodemailer")).default.createTransport({
       host: process.env.SMTP_HOST || "",
@@ -109,20 +121,20 @@ export async function POST(req: NextRequest) {
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM || "noreply@helpdesk.com",
-      to: "cpereyra@face.unt.edu.ar",
-      subject: `[Backup Helpdesk] ${new Date().toLocaleDateString("es-AR")} - ${stats.users} usuarios, ${stats.tickets} tickets, ${stats.instructivos} instructivos`,
+      to: destino,
+      subject: `[Backup Helpdesk] ${new Date().toLocaleDateString("es-AR")} - ${stats.User} usuarios, ${stats.Ticket} tickets`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1a56db;">Backup de Base de Datos</h2>
           <p>Se generó un backup del sistema de tickets.</p>
           <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 16px 0;">
             <p><strong>Fecha:</strong> ${new Date().toLocaleString("es-AR")}</p>
-            <p><strong>Usuarios:</strong> ${stats.users}</p>
-            <p><strong>Tickets:</strong> ${stats.tickets}</p>
-            <p><strong>Comentarios:</strong> ${stats.comments}</p>
-            <p><strong>Instructivos:</strong> ${stats.instructivos}</p>
-            <p><strong>Internos:</strong> ${stats.internos}</p>
-            <p><strong>Links:</strong> ${stats.links}</p>
+            <p><strong>Usuarios:</strong> ${stats.User}</p>
+            <p><strong>Tickets:</strong> ${stats.Ticket}</p>
+            <p><strong>Comentarios:</strong> ${stats.Comment}</p>
+            <p><strong>Instructivos:</strong> ${stats.Instructivo}</p>
+            <p><strong>Internos:</strong> ${stats.Interno}</p>
+            <p><strong>Links:</strong> ${stats.Link}</p>
           </div>
           <p style="font-size: 12px; color: #9ca3af;">El archivo SQL adjunto contiene los INSERTs para restaurar la base completa.</p>
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
@@ -132,7 +144,9 @@ export async function POST(req: NextRequest) {
       attachments: [{ filename, content: sql, contentType: "application/sql" }],
     })
 
-    return NextResponse.json({ ok: true, filename, stats })
+    await logAudit(session.user.id!, "ENVIAR_BACKUP", `Backup enviado a ${destino}`)
+
+    return NextResponse.json({ ok: true, filename, stats, destino })
   } catch (error) {
     console.error("Backup email error:", error)
     return NextResponse.json({ error: "Error enviando backup por correo" }, { status: 500 })

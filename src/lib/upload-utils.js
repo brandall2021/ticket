@@ -22,7 +22,8 @@ function buildUploadArtifact(file, buffer) {
 
   return {
     nombre: name || `archivo${ext}`,
-    url: `/uploads/${filename}`,
+    // Se sirve por una ruta autenticada, no desde /public.
+    url: `/api/uploads/${filename}`,
     filename,
     persistToDisk: true,
   }

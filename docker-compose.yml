@@ -1,9 +1,11 @@
 # Helpdesk — stack completo (app + PostgreSQL + Guacamole para RDP en el navegador)
 #
-#   cp .env.example .env    # completar AUTH_SECRET, SERVER_ENCRYPTION_KEY, etc.
+#   cp .env.example .env    # completar AUTH_SECRET, POSTGRES_PASSWORD, SERVER_ENCRYPTION_KEY, etc.
 #   docker compose up -d --build
 #
 # La app queda publicada por nginx en http://localhost:${HTTP_PORT:-8080}
+# Para producción, terminá TLS en este nginx (ver deploy/nginx.conf) y poné
+# NEXTAUTH_URL con https:// para que las cookies de sesión salgan con Secure.
 # Guacamole NO expone su interfaz de administración: sólo el túnel WebSocket.
 
 name: helpdesk
@@ -14,7 +16,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-helpdesk}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-helpdesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?definí POSTGRES_PASSWORD en el .env}
       POSTGRES_DB: ${POSTGRES_DB:-helpdesk}
       TZ: ${TZ:-America/Argentina/Buenos_Aires}
     volumes:
@@ -32,12 +34,13 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-helpdesk}:${POSTGRES_PASSWORD:-helpdesk}@db:5432/${POSTGRES_DB:-helpdesk}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-helpdesk}:${POSTGRES_PASSWORD:?definí POSTGRES_PASSWORD en el .env}@db:5432/${POSTGRES_DB:-helpdesk}?schema=public
       AUTH_SECRET: ${AUTH_SECRET:?definí AUTH_SECRET en el .env}
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:8080}
       TZ: ${TZ:-America/Argentina/Buenos_Aires}
       CRON_SECRET: ${CRON_SECRET:-}
+      BACKUP_EMAIL: ${BACKUP_EMAIL:-}
       MIKROTIK_ENCRYPTION_KEY: ${MIKROTIK_ENCRYPTION_KEY:-}
       SERVER_ENCRYPTION_KEY: ${SERVER_ENCRYPTION_KEY:-}
       # Gateway Guacamole (API interna). Sin GUACAMOLE_URL el acceso RDP
@@ -48,7 +51,9 @@ services:
       GUACAMOLE_PASSWORD: ${GUACAMOLE_PASSWORD:-}
       GUACAMOLE_DATA_SOURCE: ${GUACAMOLE_DATA_SOURCE:-default}
     volumes:
-      - uploads:/app/public/uploads
+      - uploads:/app/uploads
+      # Los adjuntos anteriores siguen disponibles por su URL original.
+      - legacy-uploads:/app/public/uploads
     expose:
       - "3000"
 
@@ -124,5 +129,6 @@ services:
 volumes:
   db-data:
   uploads:
+  legacy-uploads:
   guacdb-data:
   guac-schema:

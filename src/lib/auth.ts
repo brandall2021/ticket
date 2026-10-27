@@ -7,7 +7,8 @@ import { prisma } from "./prisma"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  // Sesión JWT de 7 días (antes: 30 por defecto).
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
   pages: { signIn: "/login" },
   providers: [
     Credentials({
@@ -38,7 +39,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       },
     }),
-    Google({ allowDangerousEmailAccountLinking: true }),
+    // Vincular automáticamente una cuenta de Google por email permite que
+    // cualquiera con ese email tome la cuenta existente: sólo si se habilita.
+    Google({ allowDangerousEmailAccountLinking: process.env.AUTH_ALLOW_EMAIL_LINKING === "true" }),
   ],
   callbacks: {
     async signIn({ user }) {
@@ -55,21 +58,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true
     },
     async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
-        token.id = user.id
-      }
       if (token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string },
-          select: { role: true, id: true, activo: true },
+          select: { role: true, id: true, activo: true, passwordChangedAt: true },
         })
-        if (dbUser?.activo) {
-          token.role = dbUser.role
-          token.id = dbUser.id
-        } else {
+
+        // Usuario desactivado o eliminado: se invalida la sesión.
+        if (!dbUser?.activo) return null
+
+        const stamp = dbUser.passwordChangedAt?.getTime() ?? 0
+
+        if (user) {
+          // Inicio de sesión: se sella la versión de credencial actual.
+          token.pwdAt = stamp
+        } else if (typeof token.pwdAt !== "number") {
+          // Sesiones emitidas antes de este cambio: se adoptan sin expulsar.
+          token.pwdAt = stamp
+        } else if (token.pwdAt !== stamp) {
+          // La contraseña cambió después de emitido el token: forzar re-login.
           return null
         }
+
+        token.role = dbUser.role
+        token.id = dbUser.id
       }
       return token
     },

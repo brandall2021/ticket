@@ -1,7 +1,9 @@
-import { exec } from "child_process"
+import { execFile } from "child_process"
 import { promisify } from "util"
+import { isIpLiteral } from "./ip"
 
-const execAsync = promisify(exec)
+// `execFile` no pasa por el shell: no hay interpretación de `;`, `|`, `$()`.
+const execFileAsync = promisify(execFile)
 
 export interface PingResult {
   exitoso: boolean
@@ -11,11 +13,22 @@ export interface PingResult {
 }
 
 export async function pingHost(ip: string, timeoutMs: number = 4000): Promise<PingResult> {
+  // Segunda barrera además de execFile: sólo se aceptan IPs literales.
+  if (!isIpLiteral(ip)) {
+    return {
+      exitoso: false,
+      latencia: null,
+      timeout: timeoutMs,
+      detalle: "Dirección IP inválida",
+    }
+  }
+
   const timeoutSec = Math.max(1, Math.ceil(timeoutMs / 1000))
 
   try {
-    const { stdout } = await execAsync(
-      `ping -c 1 -W ${timeoutSec} ${ip}`,
+    const { stdout } = await execFileAsync(
+      "ping",
+      ["-c", "1", "-W", String(timeoutSec), ip.trim()],
       { timeout: timeoutMs + 1000 }
     )
 

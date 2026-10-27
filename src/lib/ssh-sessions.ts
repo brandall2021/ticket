@@ -8,6 +8,8 @@ const MAX_REPLAY_CHARS = 64 * 1024
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000
 /** Tope de sesiones SSH simultáneas en todo el proceso. */
 const MAX_SESSIONS = 30
+/** Tope por usuario, para que una sola cuenta no agote el global. */
+const MAX_SESSIONS_PER_USER = 5
 const READY_TIMEOUT_MS = 20_000
 const SWEEP_INTERVAL_MS = 60_000
 
@@ -172,6 +174,14 @@ export function createSshSession(options: SshConnectOptions): Promise<SshSession
 
   if (registry().size >= MAX_SESSIONS) {
     return Promise.reject(new ServerError("Se alcanzó el límite de sesiones SSH simultáneas", "MAX_SESSIONS"))
+  }
+
+  const sesionesDelUsuario = Array.from(registry().values())
+    .filter(session => session.meta.userId === options.userId).length
+  if (sesionesDelUsuario >= MAX_SESSIONS_PER_USER) {
+    return Promise.reject(
+      new ServerError("Alcanzaste el límite de sesiones SSH abiertas: cerrá alguna antes de abrir otra.", "MAX_SESSIONS_PER_USER")
+    )
   }
   if (!options.password && !options.privateKey) {
     return Promise.reject(new ServerError("El servidor no tiene contraseña ni clave SSH configurada", "NO_CREDENTIALS"))

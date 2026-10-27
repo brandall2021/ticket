@@ -46,6 +46,8 @@ model User {
   role      Role      @default(CLIENT)
   activo    Boolean   @default(true)
   lastLogin DateTime?
+  /** Se usa para invalidar sesiones JWT cuando cambia la contraseña. */
+  passwordChangedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 

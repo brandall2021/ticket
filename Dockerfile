@@ -30,6 +30,9 @@ RUN apk add --no-cache nmap
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
+# Adjuntos: se guardan fuera de /public y se sirven por /api/uploads con sesión.
+RUN mkdir -p ./uploads && chown -R nextjs:nodejs ./uploads
+# Compatibilidad con archivos subidos antes del cambio (URLs /uploads/...).
 RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs ./public/uploads
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { crearInstructivoSchema } from "@/lib/schemas"
 
 export async function GET() {
   const session = await auth()
@@ -20,7 +21,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const data = await req.json()
-  const item = await prisma.instructivo.create({ data })
+  const parsed = crearInstructivoSchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    )
+  }
+
+  const item = await prisma.instructivo.create({
+    data: {
+      title: parsed.data.title,
+      description: parsed.data.description || "Instructivo de Gestión",
+      url: parsed.data.url,
+      imageUrl: parsed.data.imageUrl || "",
+      contenido: parsed.data.contenido ?? null,
+      activo: parsed.data.activo ?? true,
+    },
+  })
   return NextResponse.json(item)
 }

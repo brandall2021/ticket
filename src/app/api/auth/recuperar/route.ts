@@ -3,8 +3,15 @@ import jwt from "jsonwebtoken"
 import { createHash } from "node:crypto"
 import { prisma } from "@/lib/prisma"
 import { sendEmail, resetPasswordEmail } from "@/lib/email"
+import { clientIp, consume, rateLimitResponse } from "@/lib/rate-limit"
+
+const RECUPERAR_LIMIT = 5
+const RECUPERAR_WINDOW_MS = 60 * 60 * 1000
 
 export async function POST(req: Request) {
+  const limit = consume(`recuperar:${clientIp(req)}`, RECUPERAR_LIMIT, RECUPERAR_WINDOW_MS)
+  if (!limit.ok) return rateLimitResponse(limit)
+
   try {
     const { email } = await req.json()
 
@@ -14,15 +21,9 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email } })
 
-    if (!user) {
+    // Respuesta uniforme: no se revela si el email existe ni si usa OAuth.
+    if (!user || !user.password) {
       return NextResponse.json({ success: true })
-    }
-
-    if (!user.password) {
-      return NextResponse.json(
-        { error: "Esta cuenta usa un proveedor externo. No se puede recuperar la contraseña." },
-        { status: 400 }
-      )
     }
 
     const version = createHash("sha256").update(user.password).digest("hex")

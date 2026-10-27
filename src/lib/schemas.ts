@@ -1,4 +1,36 @@
 import { z } from "zod"
+import { isIpLiteral } from "./ip"
+
+/** Contraseña mínima aceptada en todo el sistema (bcrypt corta a 72 bytes). */
+export const passwordSchema = z
+  .string()
+  .min(10, "Mínimo 10 caracteres")
+  .refine(value => Buffer.byteLength(value, "utf8") <= 72, "Máximo 72 bytes")
+
+/** URL absoluta http/https: evita `javascript:`, `data:` y rutas relativas. */
+export function isSafeHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === "http:" || url.protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
+export const httpUrlSchema = z
+  .string()
+  .trim()
+  .min(1, "URL requerida")
+  .max(2048)
+  .refine(isSafeHttpUrl, "Solo se permiten enlaces http(s)")
+
+export const optionalHttpUrlSchema = z
+  .union([z.string().trim().max(2048), z.null()])
+  .optional()
+  .refine(
+    value => value === undefined || value === null || value === "" || isSafeHttpUrl(value),
+    "Solo se permiten enlaces http(s)"
+  )
 
 export const crearTicketSchema = z.object({
   titulo: z.string().min(1, "Título requerido"),
@@ -30,7 +62,7 @@ export const crearCategoriaSchema = z.object({
 export const crearUsuarioSchema = z.object({
   name: z.string().min(1, "Nombre requerido"),
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Mínimo 6 caracteres"),
+  password: passwordSchema,
   role: z.enum(["ADMIN", "AGENT", "CLIENT"]).optional(),
 })
 
@@ -53,7 +85,7 @@ export const crearMonitorGroupSchema = z.object({
 
 export const crearMonitorHostSchema = z.object({
   nombre: z.string().min(1, "Nombre requerido"),
-  ip: z.string().min(1, "IP requerida"),
+  ip: z.string().refine(isIpLiteral, "IP inválida (IPv4 o IPv6)"),
   detalle: z.string().optional(),
   grupoId: z.string().nullable().optional(),
   notificarAdmin: z.boolean().optional(),
@@ -93,3 +125,40 @@ export const crearArticuloWikiSchema = z.object({
   resumen: z.string().optional().nullable(),
   contenido: z.string().optional().nullable(),
 })
+
+// ---------------------------------------------------------------------------
+// Contenido administrable: Links, Instructivos e Internos
+// ---------------------------------------------------------------------------
+
+export const crearLinkSchema = z.object({
+  title: z.string().trim().min(1, "Título requerido").max(200),
+  description: z.string().max(1000).default(""),
+  url: httpUrlSchema,
+  imageUrl: optionalHttpUrlSchema,
+  activo: z.boolean().optional(),
+})
+
+export const actualizarLinkSchema = crearLinkSchema.partial()
+
+export const crearInstructivoSchema = z.object({
+  title: z.string().trim().min(1, "Título requerido").max(200),
+  description: z.string().max(1000).optional(),
+  url: httpUrlSchema,
+  imageUrl: optionalHttpUrlSchema,
+  contenido: z.string().nullable().optional(),
+  activo: z.boolean().optional(),
+})
+
+export const actualizarInstructivoSchema = crearInstructivoSchema.partial()
+
+export const crearInternoSchema = z.object({
+  asesor: z.string().trim().min(1, "Asesor requerido").max(200),
+  turno: z.string().trim().min(1, "Turno requerido").max(100),
+  campania: z.string().trim().min(1, "Campaña requerida").max(200),
+  supervision: z.string().trim().min(1, "Supervisión requerida").max(200),
+  interno: z.string().trim().min(1, "Interno requerido").max(50),
+  rol: z.string().trim().min(1, "Rol requerido").max(100),
+  activo: z.boolean().optional(),
+})
+
+export const actualizarInternoSchema = crearInternoSchema.partial()

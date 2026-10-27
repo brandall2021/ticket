@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AnimatedSection } from "@/components/animated-section"
 import Image from "next/image"
 import { ExternalLink } from "lucide-react"
+import { safeHref } from "@/lib/url"
 
 export default async function LinksPage() {
   const session = await auth()
@@ -33,7 +34,7 @@ export default async function LinksPage() {
           {links.map((link, i) => (
             <AnimatedSection key={link.id} delay={i * 60}>
               <a
-                href={link.url}
+                href={safeHref(link.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block"

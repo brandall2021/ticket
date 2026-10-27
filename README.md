@@ -172,6 +172,8 @@ GUACAMOLE_PUBLIC_URL=/guacamole
 GUACAMOLE_USER=guacadmin
 GUACAMOLE_PASSWORD=...
 GUACAMOLE_DATA_SOURCE=default
+# Contraseña de la base de Guacamole (obligatoria para docker compose)
+GUACAMOLE_DB_PASSWORD=...
 ```
 
 ---
@@ -279,7 +281,7 @@ nginx sólo publica `= /guacamole/websocket-tunnel`; la interfaz de administraci
 
 **Sin Guacamole** (por ejemplo en desarrollo local) el acceso RDP sigue disponible en modo degradado: `GET /api/admin/servers/[id]/rdp` genera un archivo `.rdp` que abre `mstsc` en la máquina del agente.
 
-> El usuario por defecto de Guacamole es `guacadmin` / `guacadmin`. Cambiala en la primera puesta en marcha y reflejá el valor en `GUACAMOLE_PASSWORD`: el backend la usa para la API REST.
+> La primera puesta en marcha de Guacamole crea el usuario `guacadmin` con su contraseña por defecto: cambiala desde la propia instalación y poné el mismo valor en `GUACAMOLE_PASSWORD`, porque el backend la usa para la API REST. `GUACAMOLE_DB_PASSWORD` es obligatoria para el compose y sólo aplica a la base de datos de Guacamole.
 
 ### Cifrado de credenciales
 

@@ -45,7 +45,7 @@ services:
       GUACAMOLE_URL: ${GUACAMOLE_URL:-http://guacamole:8080/guacamole}
       GUACAMOLE_PUBLIC_URL: ${GUACAMOLE_PUBLIC_URL:-/guacamole}
       GUACAMOLE_USER: ${GUACAMOLE_USER:-guacadmin}
-      GUACAMOLE_PASSWORD: ${GUACAMOLE_PASSWORD:-guacadmin}
+      GUACAMOLE_PASSWORD: ${GUACAMOLE_PASSWORD:-}
       GUACAMOLE_DATA_SOURCE: ${GUACAMOLE_DATA_SOURCE:-default}
     volumes:
       - uploads:/app/public/uploads
@@ -77,7 +77,7 @@ services:
         condition: service_completed_successfully
     environment:
       POSTGRES_USER: guacamole
-      POSTGRES_PASSWORD: ${GUACAMOLE_DB_PASSWORD:-guacamole}
+      POSTGRES_PASSWORD: ${GUACAMOLE_DB_PASSWORD:?definí GUACAMOLE_DB_PASSWORD en el .env}
       POSTGRES_DB: guacamole
     volumes:
       - guacdb-data:/var/lib/postgresql/data
@@ -104,7 +104,7 @@ services:
       POSTGRESQL_HOSTNAME: guacdb
       POSTGRESQL_DATABASE: guacamole
       POSTGRESQL_USERNAME: guacamole
-      POSTGRESQL_PASSWORD: ${GUACAMOLE_DB_PASSWORD:-guacamole}
+      POSTGRESQL_PASSWORD: ${GUACAMOLE_DB_PASSWORD:?definí GUACAMOLE_DB_PASSWORD en el .env}
     expose:
       - "8080"
 

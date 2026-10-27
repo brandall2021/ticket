@@ -22,7 +22,9 @@ import {
   type GuacamoleConfig,
 } from "../src/lib/servers"
 
-const KEY = "test-key-with-at-least-thirty-two-characters"
+// Claves de prueba: se generan para no dejar literales que parezcan secretos reales.
+const KEY = "k".repeat(40)
+const OTHER_KEY = "o".repeat(40)
 
 function withKey<T>(value: string | undefined, fn: () => T): T {
   const previousServer = process.env.SERVER_ENCRYPTION_KEY
@@ -42,10 +44,10 @@ function withKey<T>(value: string | undefined, fn: () => T): T {
 
 test("cifra y descifra las credenciales de un servidor", () => {
   withKey(KEY, () => {
-    const encrypted = encryptServerSecret("s3cr3t-SSH")
+    const encrypted = encryptServerSecret("credencial-de-prueba")
     assert.equal(isEncryptedServerSecret(encrypted), true)
-    assert.notEqual(encrypted, "s3cr3t-SSH")
-    assert.equal(decryptServerSecret(encrypted), "s3cr3t-SSH")
+    assert.notEqual(encrypted, "credencial-de-prueba")
+    assert.equal(decryptServerSecret(encrypted), "credencial-de-prueba")
     // Volver a cifrar un valor ya cifrado no lo altera.
     assert.equal(encryptServerSecret(encrypted), encrypted)
   })
@@ -53,10 +55,10 @@ test("cifra y descifra las credenciales de un servidor", () => {
 
 test("rechaza credenciales cifradas con otra clave", () => {
   let encrypted = ""
-  withKey("first-test-key-with-at-least-thirty-two-characters", () => {
-    encrypted = encryptServerSecret("s3cr3t")
+  withKey(KEY, () => {
+    encrypted = encryptServerSecret("otra-credencial-de-prueba")
   })
-  withKey("second-test-key-with-at-least-thirty-two-characters", () => {
+  withKey(OTHER_KEY, () => {
     assert.throws(() => decryptServerSecret(encrypted), /descifrar/)
   })
 })

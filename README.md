@@ -233,7 +233,7 @@ AUTH_ALLOW_EMAIL_LINKING=false
 - Confirmación en acciones destructivas (eliminar usuario, ticket, reenviar credenciales)
 - Solo ADMIN puede eliminar tickets
 
-> El detalle completo de la auditoría y su estado está en `analisis-seguridad-helpdesk.md`.
+> Medidas aplicadas, riesgos residuales y requisitos operativos: [`docs/seguridad.md`](docs/seguridad.md).
 
 ### Monitoreo MikroTik (solo ADMIN)
 - Registro de routers con credenciales API RouterOS (puerto 8728, TLS 8729 con `useTls`)

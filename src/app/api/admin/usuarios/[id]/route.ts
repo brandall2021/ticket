@@ -25,6 +25,7 @@ export async function PATCH(
   if (body.password) {
     passwordPlain = body.password
     data.password = await bcrypt.hash(body.password, 12)
+    data.passwordChangedAt = new Date()
   }
 
   const user = await prisma.user.update({

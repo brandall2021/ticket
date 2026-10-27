@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { actualizarLinkSchema } from "@/lib/schemas"
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -8,9 +9,26 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
+  const parsed = actualizarLinkSchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Datos inválidos", detalles: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    )
+  }
+
   const { id } = await params
-  const data = await req.json()
-  const link = await prisma.link.update({ where: { id }, data })
+  const { title, description, url, imageUrl, activo } = parsed.data
+  const link = await prisma.link.update({
+    where: { id },
+    data: {
+      ...(title !== undefined ? { title } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(url !== undefined ? { url } : {}),
+      ...(imageUrl !== undefined ? { imageUrl: imageUrl || "" } : {}),
+      ...(activo !== undefined ? { activo } : {}),
+    },
+  })
   return NextResponse.json(link)
 }
 

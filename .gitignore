@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+# cache local de npm (cuando se instala con --cache)
+/.npm-cache
 /.pnp
 .pnp.*
 .yarn/*

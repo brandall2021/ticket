@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES_ADMIN } from "@/lib/constants"
 import { pingHost } from "@/lib/ping"
+import { isIpLiteral } from "@/lib/ip"
 
 export async function POST(req: NextRequest) {
   const authResult = await requireRole(ROLES_ADMIN)
@@ -10,8 +11,8 @@ export async function POST(req: NextRequest) {
 
   const { hostId, ip } = await req.json()
 
-  if (!ip) {
-    return NextResponse.json({ error: "IP requerida" }, { status: 400 })
+  if (!isIpLiteral(ip)) {
+    return NextResponse.json({ error: "IP requerida (IPv4 o IPv6 válida)" }, { status: 400 })
   }
 
   const result = await pingHost(ip)

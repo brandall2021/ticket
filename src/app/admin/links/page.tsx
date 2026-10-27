@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, X, Check, ArrowLeft, Save, ExternalLink } from "l
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { safeHref } from "@/lib/url"
 import { Label } from "@/components/ui/label"
 
 interface Link {
@@ -176,7 +177,7 @@ export default function AdminLinksPage() {
                           <td className="px-4 py-3 font-medium">{item.title}</td>
                           <td className="max-w-xs truncate px-4 py-3 text-neutral-500" title={item.description}>{item.description}</td>
                           <td className="max-w-[200px] truncate px-4 py-3">
-                            <a href={item.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-brand-600 hover:underline dark:text-brand-400">
+                            <a href={safeHref(item.url)} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-brand-600 hover:underline dark:text-brand-400">
                               {item.url}
                               <ExternalLink className="h-3 w-3 shrink-0" />
                             </a>

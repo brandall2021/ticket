@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, ExternalLink } from "lucide-react"
 import { richTextToPlainText } from "@/lib/rich-text"
+import { safeHref } from "@/lib/url"
 
 export default async function InstructivoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -46,7 +47,7 @@ export default async function InstructivoDetailPage({ params }: { params: Promis
           </p>
           {item.url && (
             <a
-              href={item.url}
+              href={safeHref(item.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"

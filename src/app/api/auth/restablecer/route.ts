@@ -3,14 +3,21 @@ import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
 import { createHash } from "node:crypto"
 import { prisma } from "@/lib/prisma"
+import { clientIp, consume, rateLimitResponse } from "@/lib/rate-limit"
+
+const RESET_LIMIT = 10
+const RESET_WINDOW_MS = 60 * 60 * 1000
 
 export async function POST(req: Request) {
+  const limit = consume(`reset:${clientIp(req)}`, RESET_LIMIT, RESET_WINDOW_MS)
+  if (!limit.ok) return rateLimitResponse(limit)
+
   try {
     const { token, password } = await req.json()
 
-    if (typeof password !== "string" || password.length < 6 || Buffer.byteLength(password, "utf8") > 72) {
+    if (typeof password !== "string" || password.length < 10 || Buffer.byteLength(password, "utf8") > 72) {
       return NextResponse.json(
-        { error: "La contraseña debe tener al menos 6 caracteres" },
+        { error: "La contraseña debe tener al menos 10 caracteres" },
         { status: 400 }
       )
     }
@@ -43,7 +50,7 @@ export async function POST(req: Request) {
 
     const result = await prisma.user.updateMany({
       where: { id: user.id, password: user.password, activo: true },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword, passwordChangedAt: new Date() },
     })
 
     if (result.count !== 1) return NextResponse.json({ error: "Token utilizado" }, { status: 400 })

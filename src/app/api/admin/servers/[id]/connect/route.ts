@@ -224,7 +224,7 @@ export async function DELETE(req: NextRequest) {
   const userId = authResult.session!.user.id
 
   if (sessionId) {
-    const meta = getSshSession(sessionId)
+    const meta = getSshSession(sessionId, userId)
     if (meta && meta.userId === userId) {
       closeSshSession(sessionId, userId, "Sesión cerrada por el usuario")
     }

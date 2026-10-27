@@ -12,11 +12,11 @@ interface PasswordEntry {
   id: string
   ip: string
   usuario: string
-  contrasena: string
   funcion: string
   descripcion: string
   activo: boolean
   createdAt: string
+  tieneContrasena: boolean
   autor: { name: string; email: string }
 }
 
@@ -34,6 +34,7 @@ export default function ContrasenasPage() {
   const [descripcion, setDescripcion] = useState("")
   const [saving, setSaving] = useState(false)
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
+  const [revealed, setRevealed] = useState<Record<string, string>>({})
 
   const fetchEntries = useCallback(async (q?: string) => {
     const url = q ? `/api/admin/contrasenas?q=${encodeURIComponent(q)}` : "/api/admin/contrasenas"
@@ -43,7 +44,12 @@ export default function ContrasenasPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchEntries() }, [fetchEntries])
+  useEffect(() => {
+    const t = setTimeout(() => {
+      void fetchEntries()
+    }, 0)
+    return () => clearTimeout(t)
+  }, [fetchEntries])
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -66,7 +72,7 @@ export default function ContrasenasPage() {
     setEditingEntry(entry)
     setIp(entry.ip)
     setUsuario(entry.usuario)
-    setContrasena(entry.contrasena)
+    setContrasena("")
     setFuncion(entry.funcion)
     setDescripcion(entry.descripcion)
     setShowEditor(true)
@@ -74,14 +80,21 @@ export default function ContrasenasPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!ip.trim() || !usuario.trim() || !contrasena.trim() || !funcion.trim() || !descripcion.trim()) return
+    if (!ip.trim() || !usuario.trim() || !funcion.trim() || !descripcion.trim()) return
+    if (!editingEntry && !contrasena.trim()) return
     setSaving(true)
 
     if (editingEntry) {
       await fetch(`/api/admin/contrasenas/${editingEntry.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip, usuario, contrasena, funcion, descripcion }),
+        body: JSON.stringify({
+          ip,
+          usuario,
+          funcion,
+          descripcion,
+          ...(contrasena.trim() ? { contrasena } : {}),
+        }),
       })
     } else {
       await fetch("/api/admin/contrasenas", {
@@ -93,6 +106,8 @@ export default function ContrasenasPage() {
 
     setSaving(false)
     setShowEditor(false)
+    setRevealed({})
+    setVisiblePasswords(new Set())
     fetchEntries(search || undefined)
   }
 
@@ -102,13 +117,26 @@ export default function ContrasenasPage() {
     fetchEntries(search || undefined)
   }
 
-  function togglePassword(id: string) {
-    setVisiblePasswords(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  async function togglePassword(id: string) {
+    if (visiblePasswords.has(id)) {
+      setVisiblePasswords(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+      return
+    }
+
+    // El secreto se pide sólo al revelarlo (y queda auditado en el servidor).
+    try {
+      const res = await fetch(`/api/admin/contrasenas/${id}/revelar`, { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "No se pudo obtener la contraseña")
+      setRevealed(prev => ({ ...prev, [id]: data.contrasena }))
+      setVisiblePasswords(prev => new Set(prev).add(id))
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "No se pudo obtener la contraseña")
+    }
   }
 
   return (
@@ -162,11 +190,12 @@ export default function ContrasenasPage() {
                 <div className="space-y-1">
                   <Label>Contraseña</Label>
                   <Input
-                    type="text"
+                    type="password"
                     value={contrasena}
                     onChange={e => setContrasena(e.target.value)}
-                    placeholder="••••••"
-                    required
+                    placeholder={editingEntry ? "Dejar vacío para conservar la actual" : "••••••"}
+                    autoComplete="new-password"
+                    required={!editingEntry}
                   />
                 </div>
                 <div className="space-y-1">
@@ -248,7 +277,7 @@ export default function ContrasenasPage() {
                       <p className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-400">Contraseña</p>
                       <div className="flex items-center gap-2">
                         <p className="font-mono text-sm text-neutral-900 dark:text-neutral-100">
-                          {visiblePasswords.has(entry.id) ? entry.contrasena : "••••••••"}
+                          {visiblePasswords.has(entry.id) ? (revealed[entry.id] ?? "…") : "••••••••"}
                         </p>
                         <button
                           onClick={() => togglePassword(entry.id)}

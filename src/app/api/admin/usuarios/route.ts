@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       name: parsed.data.name,
       email: parsed.data.email,
       password: hashedPassword,
+      passwordChangedAt: new Date(),
       role: parsed.data.role || "CLIENT",
     },
     select: { id: true, name: true, email: true, role: true, activo: true, createdAt: true },

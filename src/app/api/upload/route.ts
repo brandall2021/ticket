@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
     const artifact = buildUploadArtifact(file, buffer)
 
     if (artifact.persistToDisk && artifact.filename) {
-      const dir = path.join(process.cwd(), "public", "uploads")
+      // Fuera de /public: los adjuntos se sirven por /api/uploads con sesión.
+      const dir = path.join(process.cwd(), "uploads")
       const filepath = path.join(dir, artifact.filename)
 
       await mkdir(dir, { recursive: true })

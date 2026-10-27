@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { randomInt } from "node:crypto"
 import { requireRole } from "@/lib/api-auth"
 import { ROLES } from "@/lib/constants"
 import { sendEmail, nuevaCuentaEmail } from "@/lib/email"
 
-function generatePassword(length = 12) {
+function generatePassword(length = 16) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   let result = ""
+  // `randomInt` usa el CSPRNG del sistema (Math.random no es seguro para secretos).
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
+    result += chars.charAt(randomInt(0, chars.length))
   }
   return result
 }
@@ -33,7 +35,7 @@ export async function POST(
 
   await prisma.user.update({
     where: { id },
-    data: { password: hashedPassword },
+    data: { password: hashedPassword, passwordChangedAt: new Date() },
   })
 
   const { subject, html } = nuevaCuentaEmail({

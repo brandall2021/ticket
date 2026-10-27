@@ -141,6 +141,8 @@ Cada cambio de estado envía una notificación por email al cliente. Al cerrar u
 | `/api/admin/servers/[id]/rdp` | GET | Descargar archivo `.rdp` (sin Guacamole) |
 | `/api/admin/servers/[id]/sesiones` | GET | Historial de accesos del servidor |
 | `/api/admin/ssh/[sessionId]` | GET (SSE), POST, DELETE | Flujo del terminal SSH (salida/entrada/resize) |
+| `/api/admin/contrasenas/[id]/revelar` | POST | Revela una credencial (auditado) |
+| `/api/uploads/[name]` | GET | Descarga autenticada de adjuntos |
 
 ---
 
@@ -174,6 +176,13 @@ GUACAMOLE_PASSWORD=...
 GUACAMOLE_DATA_SOURCE=default
 # Contraseña de la base de Guacamole (obligatoria para docker compose)
 GUACAMOLE_DB_PASSWORD=...
+
+# Puesta en marcha con docker compose
+POSTGRES_PASSWORD=...
+# Destinatario del backup por correo (vacío = sólo descarga)
+BACKUP_EMAIL=
+# Vincular cuentas de Google por email (riesgoso; default false)
+AUTH_ALLOW_EMAIL_LINKING=false
 ```
 
 ---
@@ -211,13 +220,20 @@ GUACAMOLE_DB_PASSWORD=...
 - Recuperación de contraseña
 
 ### Seguridad
-- Contraseñas hasheadas con bcrypt (12 rounds)
-- Autenticación con NextAuth + JWT
+- Contraseñas hasheadas con bcrypt (12 rounds), mínimo 10 caracteres (72 bytes)
+- Autenticación con NextAuth + JWT (7 días), revocada al cambiar la contraseña o desactivar el usuario
 - Protección de rutas por rol
 - Validación con Zod en todas las APIs
-- Auditoría de acciones (logAudit)
+- Rate limiting en login, registro, recuperación y reseteo de contraseña
+- Cifrado AES-256-GCM de credenciales de infraestructura (MikroTik, servidores y bóveda de contraseñas)
+- Adjuntos servidos por `/api/uploads/[name]` con sesión, fuera de `/public`
+- Escapado de HTML en los correos y validación `http(s)` en enlaces administrables
+- Cabeceras de seguridad en nginx (`nosniff`, `X-Frame-Options`, `Referrer-Policy`, HSTS)
+- Auditoría de acciones (logAudit), incluido el revelado de credenciales y los backups
 - Confirmación en acciones destructivas (eliminar usuario, ticket, reenviar credenciales)
 - Solo ADMIN puede eliminar tickets
+
+> El detalle completo de la auditoría y su estado está en `analisis-seguridad-helpdesk.md`.
 
 ### Monitoreo MikroTik (solo ADMIN)
 - Registro de routers con credenciales API RouterOS (puerto 8728, TLS 8729 con `useTls`)

@@ -28,6 +28,11 @@ enum Prioridad {
   CRITICA
 }
 
+enum ServerProtocol {
+  SSH
+  RDP
+}
+
 model User {
   id        String    @id @default(cuid())
   name      String
@@ -52,6 +57,7 @@ model User {
   notes           Note[]
   passwords       Password[]
   notifications   Notification[]
+  serverSessions  ServerSession[]
 
   @@index([email])
   @@index([role])
@@ -481,4 +487,56 @@ model ArticuloWiki {
   @@index([categoriaId])
   @@index([titulo])
   @@index([activo])
+}
+
+model Server {
+  id             String         @id @default(cuid())
+  nombre         String
+  host           String
+  protocolo      ServerProtocol @default(SSH)
+  puerto         Int            @default(22)
+  usuario        String         @default("root")
+  password       String?
+  privateKey     String?
+  passphrase     String?
+  dominio        String?
+  resolucion     String         @default("1280x800")
+  seguridad      String         @default("any")
+  descripcion    String?
+  grupo          String?
+  color          String         @default("#3b82f6")
+  activo         Boolean        @default(true)
+  fingerprint    String?
+  ultimoEstado   String?
+  ultimoError    String?
+  ultimaConexion DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  sesiones ServerSession[]
+
+  @@index([host])
+  @@index([activo])
+  @@index([protocolo])
+  @@index([grupo])
+  @@index([nombre])
+}
+
+model ServerSession {
+  id        String         @id @default(cuid())
+  serverId  String
+  server    Server         @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  usuarioId String
+  usuario   User           @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  protocolo ServerProtocol
+  estado    String         @default("ACTIVA")
+  detalle   String?
+  ip        String?
+  inicio    DateTime       @default(now())
+  fin       DateTime?
+  duracion  Int?
+
+  @@index([serverId, inicio])
+  @@index([usuarioId])
+  @@index([estado])
 }

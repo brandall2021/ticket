@@ -1,0 +1,128 @@
+# Helpdesk — stack completo (app + PostgreSQL + Guacamole para RDP en el navegador)
+#
+#   cp .env.example .env    # completar AUTH_SECRET, SERVER_ENCRYPTION_KEY, etc.
+#   docker compose up -d --build
+#
+# La app queda publicada por nginx en http://localhost:${HTTP_PORT:-8080}
+# Guacamole NO expone su interfaz de administración: sólo el túnel WebSocket.
+
+name: helpdesk
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-helpdesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-helpdesk}
+      POSTGRES_DB: ${POSTGRES_DB:-helpdesk}
+      TZ: ${TZ:-America/Argentina/Buenos_Aires}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-helpdesk} -d ${POSTGRES_DB:-helpdesk}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-helpdesk}:${POSTGRES_PASSWORD:-helpdesk}@db:5432/${POSTGRES_DB:-helpdesk}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:?definí AUTH_SECRET en el .env}
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:8080}
+      TZ: ${TZ:-America/Argentina/Buenos_Aires}
+      CRON_SECRET: ${CRON_SECRET:-}
+      MIKROTIK_ENCRYPTION_KEY: ${MIKROTIK_ENCRYPTION_KEY:-}
+      SERVER_ENCRYPTION_KEY: ${SERVER_ENCRYPTION_KEY:-}
+      # Gateway Guacamole (API interna). Sin GUACAMOLE_URL el acceso RDP
+      # se resuelve descargando un archivo .rdp.
+      GUACAMOLE_URL: ${GUACAMOLE_URL:-http://guacamole:8080/guacamole}
+      GUACAMOLE_PUBLIC_URL: ${GUACAMOLE_PUBLIC_URL:-/guacamole}
+      GUACAMOLE_USER: ${GUACAMOLE_USER:-guacadmin}
+      GUACAMOLE_PASSWORD: ${GUACAMOLE_PASSWORD:-}
+      GUACAMOLE_DATA_SOURCE: ${GUACAMOLE_DATA_SOURCE:-default}
+    volumes:
+      - uploads:/app/public/uploads
+    expose:
+      - "3000"
+
+  # --- RDP en el navegador (Apache Guacamole) -------------------------------
+
+  guacd:
+    image: guacamole/guacd:1.6.0
+    restart: unless-stopped
+
+  # Copia el esquema de Guacamole al volumen que inicializa su base de datos.
+  guacdb-init:
+    image: guacamole/guacamole:1.6.0
+    restart: "no"
+    command:
+      - /bin/sh
+      - -c
+      - cp -a /opt/guacamole/extensions/guacamole-auth-jdbc/postgresql/schema/. /schema/
+    volumes:
+      - guac-schema:/schema
+
+  guacdb:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      guacdb-init:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_USER: guacamole
+      POSTGRES_PASSWORD: ${GUACAMOLE_DB_PASSWORD:?definí GUACAMOLE_DB_PASSWORD en el .env}
+      POSTGRES_DB: guacamole
+    volumes:
+      - guacdb-data:/var/lib/postgresql/data
+      # Los .sql del esquema de Guacamole se ejecutan en el primer arranque.
+      - guac-schema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guacamole -d guacamole"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  guacamole:
+    image: guacamole/guacamole:1.6.0
+    restart: unless-stopped
+    depends_on:
+      guacd:
+        condition: service_started
+      guacdb:
+        condition: service_healthy
+    environment:
+      GUACD_HOSTNAME: guacd
+      GUACD_PORT: "4822"
+      POSTGRESQL_ENABLED: "true"
+      POSTGRESQL_HOSTNAME: guacdb
+      POSTGRESQL_DATABASE: guacamole
+      POSTGRESQL_USERNAME: guacamole
+      POSTGRESQL_PASSWORD: ${GUACAMOLE_DB_PASSWORD:?definí GUACAMOLE_DB_PASSWORD en el .env}
+    expose:
+      - "8080"
+
+  # --- Proxy ---------------------------------------------------------------
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+      - guacamole
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  db-data:
+  uploads:
+  guacdb-data:
+  guac-schema:
